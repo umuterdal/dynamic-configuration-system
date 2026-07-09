@@ -1,5 +1,6 @@
 using Configuration.Application.Extensions;
 using Configuration.Infrastructure.Extensions;
+using Configuration.Infrastructure.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,9 @@ builder.Services.AddApplicationServices();
 
 // Add RabbitMQ broker publisher (sends change events for instant consumer refresh)
 builder.Services.AddConfigurationBroker(builder.Configuration);
+
+// Add seed data service (seeds initial data on startup if database is empty)
+builder.Services.AddHostedService<SeedDataService>();
 
 var app = builder.Build();
 
