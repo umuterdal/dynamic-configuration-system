@@ -41,7 +41,7 @@ public class RabbitMqBrokerPublisherTests : IDisposable
     }
 
     [Fact]
-    public void PublishAsync_ValidEvent_PublishesMessage()
+    public async Task PublishAsync_ValidEvent_PublishesMessage()
     {
         // Arrange
         var publisherMock = new Mock<IConfigurationBrokerPublisher>();
@@ -50,7 +50,7 @@ public class RabbitMqBrokerPublisherTests : IDisposable
             .Returns(Task.CompletedTask);
 
         // Act & Assert
-        publisherMock.Object.PublishAsync("TEST-APP", "Created").GetAwaiter().GetResult();
+        await publisherMock.Object.PublishAsync("TEST-APP", "Created");
         publisherMock.Verify(p => p.PublishAsync("TEST-APP", "Created", It.IsAny<CancellationToken>()), Times.Once);
     }
 
