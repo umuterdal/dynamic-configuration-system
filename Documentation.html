@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Configuration System - Teknik Dokümantasyon</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #1e3a5f 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        header .subtitle {
+            font-size: 1.15rem;
+            color: #94a3b8;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        header .meta {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        header .meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 40px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .toc h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 8px;
+        }
+
+        .toc a {
+            color: var(--primary);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: block;
+            transition: background 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .toc a:hover {
+            background: #eff6ff;
+        }
+
+        /* Sections */
+        section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        section h2 {
+            font-size: 1.6rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+        }
+
+        section h3 {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin: 28px 0 12px;
+        }
+
+        section h4 {
+            font-size: 1.05rem;
+            color: var(--text);
+            margin: 20px 0 8px;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text);
+        }
+
+        ul, ol {
+            margin: 12px 0 16px 24px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 20px 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin: 16px 0;
+        }
+
+        code {
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.88rem;
+        }
+
+        :not(pre) > code {
+            background: #f1f5f9;
+            color: var(--primary-dark);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.93rem;
+        }
+
+        th {
+            background: var(--secondary);
+            color: white;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* Info boxes */
+        .info-box {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.info {
+            background: #eff6ff;
+            border-color: var(--primary);
+        }
+
+        .info-box.success {
+            background: #ecfdf5;
+            border-color: var(--success);
+        }
+
+        .info-box.warning {
+            background: #fffbeb;
+            border-color: var(--warning);
+        }
+
+        .info-box.danger {
+            background: #fef2f2;
+            border-color: var(--danger);
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Architecture diagram */
+        .arch-diagram {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 24px;
+            border-radius: 8px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 16px 0;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+            section {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            header {
+                background: var(--secondary) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .toc {
+                break-after: page;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>Dynamic Configuration System</h1>
+        <p class="subtitle">.NET 8 ile yazılmış, MongoDB storage, in-memory cache ve otomatik arka plan yenileme desteği sunan dinamik konfigürasyon yönetim sistemi</p>
+        <div class="meta">
+            <span>.NET 8</span>
+            <span>MongoDB</span>
+            <span>RabbitMQ</span>
+            <span>Clean Architecture</span>
+            <span>39 Unit Test</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- Table of Contents -->
+    <nav class="toc">
+        <h2>İçindekiler</h2>
+        <div class="toc-grid">
+            <a href="#overview">1. Proje Genel Bakışı</a>
+            <a href="#quickstart">2. Hızlı Başlangıç</a>
+            <a href="#architecture">3. Mimari Yapı</a>
+            <a href="#components">4. Bileşenler</a>
+            <a href="#configuration-reader">5. ConfigurationReader</a>
+            <a href="#cache">6. Cache Mekanizması</a>
+            <a href="#polling">7. Periyodik Yenileme (Polling)</a>
+            <a href="#message-broker">8. Message Broker (RabbitMQ)</a>
+            <a href="#admin-panel">9. Admin Panel</a>
+            <a href="#demo-api">10. Demo API</a>
+            <a href="#seed-data">11. Seed Data</a>
+            <a href="#docker">12. Docker Orchestration</a>
+            <a href="#testing">13. Test Stratejisi</a>
+            <a href="#failure-handling">14. Hata Yönetimi</a>
+            <a href="#design-patterns">15. Design Patterns</a>
+            <a href="#decisions">16. Teknik Kararlar</a>
+            <a href="#requirements-matrix">17. Gereksinim Matrisi</a>
+        </div>
+    </nav>
+
+    <!-- 1. Overview -->
+    <section id="overview">
+        <h2>1. Proje Genel Bakışı</h2>
+        <p>Bu proje, uygulama restart veya deployment gerektirmeden konfigürasyon değişikliklerinin runtime'da dinamik olarak yönetilmesini sağlayan production-ready bir .NET 8 sistemidir.</p>
+
+        <h3>Temel Özellikler</h3>
+        <ul>
+            <li><strong>Dinamik Konfigürasyon:</strong> Deployment veya restart olmadan runtime güncellemeler</li>
+            <li><strong>Service Isolation:</strong> Her servis sadece kendi konfigürasyon kayıtlarını görür</li>
+            <li><strong>Tip Güvenliği:</strong> <code>GetValue&lt;T&gt;()</code> ile generic, strongly-typed erişim</li>
+            <li><strong>Thread Güvenliği:</strong> ConcurrentDictionary ile eşzamanlı erişim</li>
+            <li><strong>Otomatik Yenileme:</strong> BackgroundService + PeriodicTimer (30sn varsayılan)</li>
+            <li><strong>Graceful Degradation:</strong> Storage erişilemezse son başarılı cache ile çalışmaya devam</li>
+            <li><strong>Message Broker:</strong> RabbitMQ ile anlık cache yenileme (polling'i tamamlar)</li>
+            <li><strong>Otomatik Seed Data:</strong> İlk çalıştırmada demo verileri otomatik eklenir</li>
+        </ul>
+
+        <h3>Teknoloji Yığını</h3>
+        <table>
+            <tr><th>Katman</th><th>Teknoloji</th><th>Amaç</th></tr>
+            <tr><td>Runtime</td><td>.NET 8</td><td>Target framework</td></tr>
+            <tr><td>Storage</td><td>MongoDB 7.0</td><td>Konfigürasyon verilerinin saklanması</td></tr>
+            <tr><td>Cache</td><td>ConcurrentDictionary</td><td>O(1) hızlı okuma</td></tr>
+            <tr><td>Message Broker</td><td>RabbitMQ 3.x</td><td>Anlık bildirim</td></tr>
+            <tr><td>Web</td><td>ASP.NET Core MVC</td><td>Admin Panel</td></tr>
+            <tr><td>API</td><td>ASP.NET Core Web API</td><td>Swagger'lı Demo API</td></tr>
+            <tr><td>Logging</td><td>Serilog</td><td>Yapılandırılmış loglama</td></tr>
+            <tr><td>Test</td><td>xUnit + Moq + FluentAssertions</td><td>39 unit test</td></tr>
+            <tr><td>Container</td><td>Docker + Docker Compose</td><td>Orchestration</td></tr>
+        </table>
+    </section>
+
+    <!-- 2. Quick Start -->
+    <section id="quickstart">
+        <h2>2. Hızlı Başlangıç</h2>
+
+        <div class="info-box info">
+            <strong>Tek Gereklilik: Docker Desktop</strong>
+            Proje, .NET SDK veya herhangi bir ekstra araç gerektirmez. Sadece Docker Desktop yeterlidir.
+        </div>
+
+        <h3>Kurulum</h3>
+<pre><code># 1. Repoyu klonla
+git clone https://github.com/umuterdal/dynamic-configuration-system.git
+cd dynamic-configuration-system
+
+# 2. Container'ları başlat
+docker-compose up -d
+
+# 3. Servisleri kontrol et
+docker ps</code></pre>
+
+        <h3>Servis URL'leri</h3>
+        <table>
+            <tr><th>Servis</th><th>URL</th><th>Açıklama</th></tr>
+            <tr><td>Admin Panel</td><td><code>http://localhost:5000</code></td><td>CRUD yönetimi</td></tr>
+            <tr><td>Demo API</td><td><code>http://localhost:5001/swagger</code></td><td>Swagger UI</td></tr>
+            <tr><td>RabbitMQ</td><td><code>http://localhost:15672</code></td><td>Management UI (guest/guest)</td></tr>
+            <tr><td>MongoDB</td><td><code>localhost:27017</code></td><td>Database connection</td></tr>
+        </table>
+
+        <h3>Durdurma</h3>
+<pre><code># Container'ları durdur
+docker-compose down
+
+# Volume'larla birlikte sıfırla (veritabanını temizle)
+docker-compose down -v</code></pre>
+
+        <div class="info-box success">
+            <strong>Otomatik Seed Data</strong>
+            İlk çalıştırmada Admin Panel otomatik olarak 5 demo konfigürasyon kaydı ekler. Veritabanını sıfırlamak için <code>docker-compose down -v</code> komutunu kullanın.
+        </div>
+    </section>
+
+    <!-- 3. Architecture -->
+    <section id="architecture">
+        <h2>3. Mimari Yapı</h2>
+        <p>Proje, Clean Architecture prensiplerine uygun olarak tasarlanmıştır. Her katman sadece bir altındaki katmana bağımlıdır.</p>
+
+        <h3>Mimari Diyagram</h3>
+<div class="arch-diagram">┌─────────────────────────────────────────────────────────────────┐
+│                    Configuration.Library                        │
+│              (Public API - ConfigurationReader)                 │
+├─────────────────────────────────────────────────────────────────┤
+│                    Configuration.Application                    │
+│          (Business Logic - ConfigurationService, Broker)        │
+├─────────────────────────────────────────────────────────────────┤
+│                   Configuration.Infrastructure                  │
+│             (MongoDB Repository, Seed Data Service)             │
+├─────────────────────────────────────────────────────────────────┤
+│                     Configuration.Domain                        │
+│            (Entities, Interfaces, DTOs, Settings)               │
+└─────────────────────────────────────────────────────────────────┘</div>
+
+        <h3>Proje Yapısı</h3>
+<table>
+<tr><th>Proje</th><th>Tür</th><th>Sorumluluk</th></tr>
+<tr><td><code>Configuration.Domain</code></td><td>Class Library</td><td>Entity'ler, interface'ler, DTO'lar, settings. Hiçbir dış bağımlılık yok.</td></tr>
+<tr><td><code>Configuration.Application</code></td><td>Class Library</td><td>İş mantığı (ConfigurationService), RabbitMQ publisher</td></tr>
+<tr><td><code>Configuration.Infrastructure</code></td><td>Class Library</td><td>MongoDB repository implementasyonu, seed data servisi</td></tr>
+<tr><td><code>Configuration.Library</code></td><td>Class Library</td><td>ConfigurationReader (dışarıya açık API), refresh servisi, broker consumer</td></tr>
+<tr><td><code>Configuration.Admin</code></td><td>Web (MVC)</td><td>ASP.NET Core MVC Admin Paneli</td></tr>
+<tr><td><code>Configuration.DemoApi</code></td><td>Web (API)</td><td>Swagger'lı Demo API</td></tr>
+<tr><td><code>Configuration.Shared</code></td><td>Class Library</td><td>Paylaşılan yardımcılar</td></tr>
+<tr><td><code>Configuration.UnitTests</code></td><td>Test</td><td>39 adet xUnit unit test</td></tr>
+</table>
+
+        <h3>Dependency Inversion</h3>
+        <p>Bağımlılıklar Domain katmanına doğru yönelir:</p>
+        <ul>
+            <li><strong>Domain:</strong> Hiçbir dış bağımlılık yok (sadece MongoDB.Bson)</li>
+            <li><strong>Application:</strong> Sadece Domain'e bağımlı</li>
+            <li><strong>Infrastructure:</strong> Domain interface'lerini implemente eder</li>
+            <li><strong>Library:</strong> Tüm katmanları orkestra eder</li>
+        </ul>
+    </section>
+
+    <!-- 4. Components -->
+    <section id="components">
+        <h2>4. Bileşenler</h2>
+
+        <h3>4.1 ConfigurationRecord (Domain Entity)</h3>
+        <p>Her konfigürasyon kaydını temsil eden entity:</p>
+<table>
+<tr><th>Alan</th><th>Tip</th><th>Açıklama</th></tr>
+<tr><td><code>Id</code></td><td>string (ObjectId)</td><td>Unique identifier</td></tr>
+<tr><td><code>Name</code></td><td>string</td><td>Konfigürasyon key adı (ör: "SiteName")</td></tr>
+<tr><td><code>Type</code></td><td>string</td><td>Veri tipi: "string", "int", "double", "bool"</td></tr>
+<tr><td><code>Value</code></td><td>string</td><td>Değer (tip güvenliği için string olarak saklanır)</td></tr>
+<tr><td><code>IsActive</code></td><td>int</td><td>1=aktif, 0=pasif. Sadece aktif kayıtlar döner.</td></tr>
+<tr><td><code>ApplicationName</code></td><td>string</td><td>Servis izolasyonu için uygulama adı</td></tr>
+</table>
+
+        <h3>4.2 ConfigurationRepository (Infrastructure)</h3>
+        <p>MongoDB üzerinde CRUD işlemleri implemente eder. İki constructor'ı vardır:</p>
+        <ul>
+            <li><code>MongoConfigurationRepository(IMongoCollection, ILogger)</code> — ConfigurationReader için</li>
+            <li><code>MongoConfigurationRepository(IOptions&lt;ConfigurationSettings&gt;, ILogger)</code> — DI için</li>
+        </ul>
+        <p>Oluşturulduğunda <code>ApplicationName</code> üzerinde indeks oluşturarak performansı artırır.</p>
+
+        <h3>4.3 ConfigurationService (Application)</h3>
+        <p>İş mantığı katmanı. CRUD işlemlerini doğrulama ve validasyon ile yönetir:</p>
+        <ul>
+            <li>Geçerli tipler: <code>string</code>, <code>int</code>, <code>double</code>, <code>bool</code></li>
+            <li>Paylaşımlı <code>ValidateRequest()</code> methodları ile DRY prensibi</li>
+            <li>Her CRUD işleminden sonra RabbitMQ'ya change event'i publish eder</li>
+        </ul>
+    </section>
+
+    <!-- 5. ConfigurationReader -->
+    <section id="configuration-reader">
+        <h2>5. ConfigurationReader</h2>
+        <p>Kütüphanenin dışarıya açık API'si. 3 parametre ile initialize edilir:</p>
+
+<pre><code>var reader = new ConfigurationReader(
+    applicationName: "SERVICE-A",
+    connectionString: "mongodb://localhost:27017",
+    refreshTimerIntervalInMs: 30000);</code></pre>
+
+        <h3>Parametreler</h3>
+<table>
+<tr><th>Parametre</th><th>Açıklama</th></tr>
+<tr><td><code>applicationName</code></td><td>Uygulama adı. Servis izolasyonu için kullanılır.</td></tr>
+<tr><td><code>connectionString</code></td><td>MongoDB bağlantı adresi.</td></tr>
+<tr><td><code>refreshTimerIntervalInMs</code></td><td>Periyodik yenileme aralığı (milisaniye).</td></tr>
+</table>
+
+        <h3>Public Methodlar</h3>
+
+<h4><code>T GetValue&lt;T&gt;(string key)</code></h4>
+<p>Belirtilen key için değeri tip güvenli olarak döner. Supports: <code>string</code>, <code>int</code>, <code>double</code>, <code>bool</code>.</p>
+<pre><code>string siteName = reader.GetValue&lt;string&gt;("SiteName");      // "soty.io"
+int maxItems = reader.GetValue&lt;int&gt;("MaxItemCount");        // 500
+double taxRate = reader.GetValue&lt;double&gt;("TaxRate");        // 0.18
+bool isEnabled = reader.GetValue&lt;bool&gt;("IsBasketEnabled"); // true</code></pre>
+
+<h4><code>bool TryGetValue&lt;T&gt;(string key, out T? value)</code></h4>
+<p>Key mevcutsa değeri döner, yoksa false. Exception fırlatmaz.</p>
+<pre><code>if (reader.TryGetValue&lt;string&gt;("SiteName", out var name))
+    Console.WriteLine(name);</code></pre>
+
+<h4><code>IReadOnlyDictionary&lt;string, string&gt; GetAllValues()</code></h4>
+<p>Tüm aktif konfigürasyonları dictionary olarak döner.</p>
+
+<h4><code>Task RefreshAsync()</code></h4>
+<p>Cache'i manuel olarak yeniler. Eşzamanlı çağrılarda coalesce edilir (interlocked guard).</p>
+
+<h4><code>object GetHealthInfo()</code></h4>
+<p>Cache durumu hakkında bilgi döner: son yenileme zamanı, cache yaşı, polling aralığı, cache'lenen key'ler.</p>
+
+        <div class="info-box warning">
+            <strong>Önemli</strong>
+            ConfigurationReader constructor'da MongoDB'ye bağlanıp ilk yükleme yapar. Bu nedenle constructor synchronous olarak <code>LoadConfigurationsAsync().GetAwaiter().GetResult()</code> çağırır.
+        </div>
+    </section>
+
+    <!-- 6. Cache -->
+    <section id="cache">
+        <h2>6. Cache Mekanizması</h2>
+
+        <h3>Neden ConcurrentDictionary?</h3>
+        <ul>
+            <li><strong>O(1)</strong> ortalama okuma süresi</li>
+            <li><strong>Thread-safe</strong> — built-in senkronizasyon</li>
+            <li><strong>Lock-free reads</strong> — çoğu operasyonda kilit yok</li>
+            <li><strong>Sıfır dış bağımlılık</strong> — MemoryCache'e gerek yok</li>
+        </ul>
+
+        <h3>Cache Güncelleme Stratejisi</h3>
+        <p>Yenileme sırasında atomic swap kullanılır:</p>
+<pre><code>// 1. Yeni cache oluştur
+var newCache = new ConcurrentDictionary&lt;string, ConfigurationRecord&gt;();
+
+// 2. Veritabanından taze verileri yükle
+foreach (var record in records)
+    newCache[record.Name] = record;
+
+// 3. Atomic swap — referansı değiştir, kilit yok
+Interlocked.Exchange(ref _cache, newCache);</code></pre>
+
+        <h3>Eşzamanlılık Güvenliği</h3>
+        <ul>
+            <li><strong>Single writer:</strong> Yenileme işlemini sadece bir BackgroundService yapar</li>
+            <li><strong>Multiple readers:</strong> Eşzamanlı okuma işlemleri ConcurrentDictionary tarafından yönetilir</li>
+            <li><strong>Overlapping refresh prevention:</strong> <code>Interlocked.CompareExchange</code> ile eşzamanlı yenilemeler engellenir</li>
+        </ul>
+
+        <h3>Case-Insensitive Key Erişimi</h3>
+        <p>Cache, <code>StringComparer.OrdinalIgnoreCase</code> ile oluşturulur. Bu sayede <code>"sitename"</code> ve <code>"SiteName"</code> aynı key olarak tanınır.</p>
+    </section>
+
+    <!-- 7. Polling -->
+    <section id="polling">
+        <h2>7. Periyodik Yenileme (Polling)</h2>
+        <p><code>ConfigurationRefreshService</code>, BackgroundService kullanarak periyodik olarak cache'i yeniler.</p>
+
+        <h3>Neden BackgroundService + PeriodicTimer?</h3>
+        <table>
+            <tr><th>Yaklaşım</th><th>Artıları</th><th>Eksileri</th></tr>
+            <tr><td><strong>BackgroundService + PeriodicTimer</strong> <span class="badge badge-green">Seçilen</span></td><td>Built-in yaşam döngüsü, graceful shutdown, DI entegrasyonu</td><td>—</td></tr>
+            <tr><td>System.Threading.Timer</td><td>Daha fazla kontrol</td><td>Orphaned callback riski, manuel yaşam döngüsü</td></tr>
+            <tr><td>Hangfire</td><td>Dashboard, persistence</td><td>Over-engineered, ek bağımlılık</td></tr>
+        </table>
+
+        <h3>Implementasyon</h3>
+<pre><code>protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+{
+    using var timer = new PeriodicTimer(_refreshInterval);
+
+    while (await timer.WaitForNextTickAsync(stoppingToken))
+    {
+        try
+        {
+            await _configurationReader.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refresh failed");
+        }
+    }
+}</code></pre>
+
+        <h3>Polling Nasıl Test Edilir?</h3>
+<ol>
+    <li><strong>Cache durumunu kontrol et:</strong> <code>curl http://localhost:5001/api/demo/health</code></li>
+    <li><strong>Admin Panel'den değeri değiştir</strong> (ör: SiteName: "soty.io" → "yeni-site.com")</li>
+    <li><strong>Cache hemen değişmez</strong> (30sn polling süresi var)</li>
+    <li><strong>Manuel refresh ile anında test et:</strong> <code>curl -X POST http://localhost:5001/api/demo/refresh</code></li>
+    <li><strong>Veya 30sn bekle</strong> → otomatik yenilenir</li>
+</ol>
+    </section>
+
+    <!-- 8. Message Broker -->
+    <section id="message-broker">
+        <h2>8. Message Broker (RabbitMQ)</h2>
+        <p>RabbitMQ, polling'i <strong>tamamlar</strong>, <strong>yerine geçmez</strong>. polling ana mekanizmadır, broker sadece gecikmeyi azaltır.</p>
+
+        <h3>Neden Her İki Mekanizma?</h3>
+        <table>
+            <tr><th>Mekanizma</th><th>Rolü</th><th>Gecikme</th></tr>
+            <tr><td><strong>Polling</strong></td><td>Ana mekanizma — her 30sn'de bir kontrol</td><td>0-30sn</td></tr>
+            <tr><td><strong>RabbitMQ</strong></td><td>İyileştirme — değişiklik anında bildirim</td><td>~100ms</td></tr>
+        </table>
+
+        <h3>Neden İkisi Birden?</h3>
+        <ul>
+            <li><strong>Polling tek başına yeterli</strong> — broker çökse bile sistem çalışır</li>
+            <li><strong>Broker tek başına yetersiz</strong> — bağlantı koparsa polling kesintisiz devam eder</li>
+            <li><strong>Production gerçeği:</strong> Hiçbir message broker %100 güvenilir değildir. Polling fallback olarak her zaman çalışır.</li>
+        </ul>
+
+        <h3>Mimari</h3>
+        <ul>
+            <li><strong>Publisher:</strong> <code>RabbitMqConfigurationBrokerPublisher</code> — Admin CRUD sonrası change event'i publish eder</li>
+            <li><strong>Consumer:</strong> <code>ConfigurationBrokerConsumer</code> — Event'i alır, anında cache refresh yapar</li>
+            <li><strong>Exchange:</strong> Fanout exchange — tüm consumer'lara bildirim gider</li>
+            <li><strong>Ack:</strong> Manuel acknowledgment — message işlendikten sonra onaylanır</li>
+        </ul>
+
+        <h3>Graceful Degradation</h3>
+        <p>RabbitMQ çökse bile:</p>
+        <ul>
+            <li>Polling devam eder</li>
+            <li>Publisher hatası uygulamayı bozmaz (try-catch ile sarılmış)</li>
+            <li>Consumer bağlantı hatası loglanır, polling fallback olarak çalışır</li>
+        </ul>
+    </section>
+
+    <!-- 9. Admin Panel -->
+    <section id="admin-panel">
+        <h2>9. Admin Panel</h2>
+        <p>ASP.NET Core MVC ile yazılmış, Bootstrap tabanlı yönetim paneli.</p>
+
+        <h3>Özellikler</h3>
+        <ul>
+            <li><strong>Listeleme:</strong> Tüm konfigürasyon kayıtlarını tablo halinde gösterir</li>
+            <li><strong>Oluşturma:</strong> Yeni konfigürasyon kaydı ekler</li>
+            <li><strong>Güncelleme:</strong> Mevcut kayıtları düzenler</li>
+            <li><strong>Silme:</strong> Kayıtları siler (onay ile)</li>
+            <li><strong>Client-side Filtreleme:</strong> Name sütununa göre anlık filtreleme</li>
+            <li><strong>Anti-Forgery:</strong> CSRF koruması</li>
+        </ul>
+
+        <h3>Client-Side Filtreleme</h3>
+        <p>Case gereksinimi: "Kayıtları client side olarak ismi ile filtrelenebilmelidir."</p>
+<pre><code>// JavaScript — keyup event ile Name sütununda filtreleme
+document.getElementById('searchInput').addEventListener('keyup', function () {
+    var filter = this.value.toLowerCase();
+    var rows = document.querySelectorAll('#configurationTable tr');
+    rows.forEach(function (row) {
+        if (row.cells.length < 6) return;
+        var name = row.cells[1]?.textContent.toLowerCase() || '';
+        row.style.display = name.includes(filter) ? '' : 'none';
+    });
+});</code></pre>
+
+        <h3>Change Event Publishing</h3>
+        <p>Her CRUD işleminden sonra RabbitMQ'ya change event'i publish edilir:</p>
+        <ul>
+            <li>Create → <code>PublishAsync(applicationName, "Created")</code></li>
+            <li>Update → <code>PublishAsync(applicationName, "Updated")</code></li>
+            <li>Delete → <code>PublishAsync(applicationName, "Deleted")</code></li>
+        </ul>
+    </section>
+
+    <!-- 10. Demo API -->
+    <section id="demo-api">
+        <h2>10. Demo API</h2>
+        <p>Swagger UI ile donatılmış, ConfigurationReader kullanımını gösteren REST API.</p>
+
+        <h3>Endpoint'ler</h3>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Açıklama</th></tr>
+<tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/demo/value/{key}</code></td><td>String değer getir</td></tr>
+<tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/demo/typed/{key}?type=int</code></td><td>Tip belirterek değer getir</td></tr>
+<tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/demo/all</code></td><td>Tüm konfigürasyonları getir</td></tr>
+<tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/demo/health</code></td><td>Cache durumu ve polling bilgisi</td></tr>
+<tr><td><span class="badge badge-green">POST</span></td><td><code>/api/demo/refresh</code></td><td>Cache'i yenile</td></tr>
+</table>
+
+        <h3>Health Endpoint Örneği</h3>
+<pre><code>{
+    "applicationName": "SERVICE-A",
+    "lastCacheUpdate": "2026-07-09T16:30:21Z",
+    "cacheAgeSeconds": 25,
+    "refreshIntervalMs": 30000,
+    "cachedKeyCount": 4,
+    "cachedKeys": ["TaxRate", "MaxItemCount", "IsBasketEnabled", "SiteName"]
+}</code></pre>
+
+        <h3>Örnek Kullanım</h3>
+<pre><code># Tüm konfigürasyonları getir
+curl http://localhost:5001/api/demo/all
+
+# Tek değer getir
+curl http://localhost:5001/api/demo/value/SiteName
+
+# Tip belirterek getir
+curl "http://localhost:5001/api/demo/typed/TaxRate?type=double"
+
+# Cache yenile
+curl -X POST http://localhost:5001/api/demo/refresh
+
+# Sağlık durumu
+curl http://localhost:5001/api/demo/health</code></pre>
+    </section>
+
+    <!-- 11. Seed Data -->
+    <section id="seed-data">
+        <h2>11. Seed Data</h2>
+        <p><code>SeedDataService</code>, uygulama ilk başladığında veritabanı boşsa demo verilerini otomatik olarak ekler.</p>
+
+        <h3>Neden Seed Data?</h3>
+        <ul>
+            <li>İndiren kişi hemen sistemi test edebilmeli</li>
+            <li>Manuel veri ekleme zahmetinden kurtulmalı</li>
+            <li>Admin Panel ve Demo API hemen kullanılabilir olmalı</li>
+        </ul>
+
+        <h3>Seed Data İçeriği</h3>
+<table>
+<tr><th>Name</th><th>Type</th><th>Value</th><th>IsActive</th><th>ApplicationName</th></tr>
+<tr><td>SiteName</td><td>string</td><td>soty.io</td><td>1 (aktif)</td><td>SERVICE-A</td></tr>
+<tr><td>MaxItemCount</td><td>int</td><td>500</td><td>1 (aktif)</td><td>SERVICE-A</td></tr>
+<tr><td>TaxRate</td><td>double</td><td>0.18</td><td>1 (aktif)</td><td>SERVICE-A</td></tr>
+<tr><td>IsBasketEnabled</td><td>bool</td><td>true</td><td>1 (aktif)</td><td>SERVICE-A</td></tr>
+<tr><td>MaintenanceMode</td><td>bool</td><td>false</td><td>0 (pasif)</td><td>SERVICE-A</td></tr>
+</table>
+
+        <h3>Idempotent Tasarım</h3>
+        <p>SeedDataService <strong>idempotent</strong>tir — veritabanında veri varsa tekrar eklemez:</p>
+<pre><code>var existing = await _repository.GetAllAsync(stoppingToken);
+if (existing.Count > 0)
+{
+    _logger.LogInformation("Database already contains {Count} records, skipping seed", existing.Count);
+    return;
+}</code></pre>
+
+        <h3>Neden Sadece Admin Panel'de?</h3>
+        <ul>
+            <li>Admin CRUD yönetim paneli — veri oradan eklenir/yönetilir</li>
+            <li>DemoApi sadece okuyucu — seed yapmasına gerek yok</li>
+            <li>İki taraf da seed yaparsa race condition riski olur</li>
+        </ul>
+
+        <h3>Log Çıktısı</h3>
+<pre><code># İlk çalıştırmada:
+[INF] Seeding initial configuration data...
+[INF] Successfully seeded 5 configuration records
+
+# Sonraki çalıştırmalarda:
+[INF] Database already contains 5 records, skipping seed</code></pre>
+    </section>
+
+    <!-- 12. Docker -->
+    <section id="docker">
+        <h2>12. Docker Orchestration</h2>
+        <p><code>docker-compose.yml</code> 4 container ile tam bir ortam sağlar.</p>
+
+        <h3>Container'lar</h3>
+<table>
+<tr><th>Servis</th><th>Image</th><th>Port</th><th>Sağlık Kontrolü</th></tr>
+<tr><td>configuration-mongodb</td><td>mongo:7.0</td><td>27017</td><td><code>mongosh --eval db.adminCommand('ping')</code></td></tr>
+<tr><td>configuration-rabbitmq</td><td>rabbitmq:3-management</td><td>5672, 15672</td><td><code>rabbitmq-diagnostics check_port_connectivity</code></td></tr>
+<tr><td>configuration-admin</td><td>Özel build</td><td>5000</td><td><code>curl -f http://localhost:8080/</code></td></tr>
+<tr><td>configuration-demoapi</td><td>Özel build</td><td>5001</td><td><code>curl -f http://localhost:8080/swagger/index.html</code></td></tr>
+</table>
+
+        <h3>Dependency Zinciri</h3>
+        <ul>
+            <li>Admin ve DemoApi, <strong>MongoDB healthy</strong> olduktan sonra başlar</li>
+            <li>Admin ve DemoApi, <strong>RabbitMQ healthy</strong> olduktan sonra başlar</li>
+            <li><code>depends_on</code> ile <code>condition: service_healthy</code> kullanılır</li>
+        </ul>
+
+        <h3>Environment Variables</h3>
+        <p>Configuration bilgileri environment variable ile verilir (12-factor app prensibi):</p>
+<pre><code>environment:
+  - ConfigurationReader__ConnectionString=mongodb://admin:password123@mongodb:27017
+  - ConfigurationReader__ApplicationName=SERVICE-A
+  - ConfigurationReader__DatabaseName=ConfigurationDb
+  - ConfigurationReader__CollectionName=Configurations
+  - ConfigurationReader__RefreshTimerIntervalInMs=30000
+  - ConfigurationBroker__HostName=rabbitmq
+  - ConfigurationBroker__Port=5672
+  - ConfigurationBroker__ExchangeName=config-changes</code></pre>
+
+        <h3>Multi-Stage Build</h3>
+        <p>Dockerfile'lar multi-stage build kullanır:</p>
+        <ol>
+            <li><strong>Restore:</strong> NuGet paketlerini indir</li>
+            <li><strong>Build:</strong> Proje derleme</li>
+            <li><strong>Publish:</strong> Publish işlemi</li>
+            <li><strong>Final:</strong> Sadece gerekli dosyalar ile küçük image</li>
+        </ol>
+    </section>
+
+    <!-- 13. Testing -->
+    <section id="testing">
+        <h2>13. Test Stratejisi</h2>
+        <p>39 adet xUnit unit test ile kapsamlı test coverage.</p>
+
+        <h3>Test Araçları</h3>
+        <table>
+            <tr><th>Araç</th><th>Amaç</th></tr>
+            <tr><td><strong>xUnit</strong></td><td>Test framework</td></tr>
+            <tr><td><strong>Moq</strong></td><td>Mock nesneler</td></tr>
+            <tr><td><strong>FluentAssertions</strong></td><td>Okunabilir assertions</td></tr>
+        </table>
+
+        <h3>Test Kategorileri</h3>
+
+<h4>ConfigurationReader Tests (14 test)</h4>
+<ul>
+    <li>GetValue — string, int, double, bool tip dönüşümleri</li>
+    <li>GetValue — eksik key hatası (KeyNotFoundException)</li>
+    <li>GetValue — pasif key hatası</li>
+    <li>GetValue — geçersiz tip dönüşümü hatası</li>
+    <li>TryGetValue — mevcut/olmayan key</li>
+    <li>GetAllValues — sadece aktif kayıtlar</li>
+    <li>GetValue — case-insensitive erişim</li>
+    <li>RefreshAsync — cache güncelleme</li>
+    <li>Constructor — null parametreler</li>
+    <li>Constructor — geçersiz refresh aralığı</li>
+    <li>Dispose sonrası erişim</li>
+</ul>
+
+<h4>ConfigurationService Tests (10 test)</h4>
+<ul>
+    <li>GetAllConfigurationsAsync — tüm kayıtlar</li>
+    <li>GetConfigurationsByApplicationAsync — filtreleme</li>
+    <li>GetByIdAsync — mevcut/olmayan ID</li>
+    <li>CreateAsync — geçerli/geçersiz istek</li>
+    <li>UpdateAsync — güncelleme</li>
+    <li>DeleteAsync — silme</li>
+</ul>
+
+<h4>Broker Tests (15 test)</h4>
+<ul>
+    <li>RabbitMQ Publisher — publish işlemleri</li>
+    <li>Broker Consumer — mesaj işleme</li>
+    <li>Hata senaryoları — bağlantı hataları</li>
+    <li>Graceful degradation</li>
+</ul>
+
+        <h3>Test Çalıştırma</h3>
+<pre><code># Tüm testleri çalıştır
+dotnet test
+
+# Coverage ile çalıştır
+dotnet test --collect:"XPlat Code Coverage"</code></pre>
+    </section>
+
+    <!-- 14. Failure Handling -->
+    <section id="failure-handling">
+        <h2>14. Hata Yönetimi</h2>
+
+        <h3>Graceful Degradation</h3>
+        <p>Storage erişilemezse sistem son başarılı cache ile çalışmaya devam eder:</p>
+        <ol>
+            <li><strong>İlk yükleme başarısız:</strong> Boş cache — uygulama başlar ama veri yok</li>
+            <li><strong>Yenileme başarısız:</strong> Önceki cache korunur</li>
+            <li><strong>Uygulama çalışmaya devam eder</strong> — eski verilerle</li>
+            <li><strong>Warning logları</strong> — monitoring için</li>
+        </ol>
+
+        <h3>Implementasyon</h3>
+<pre><code>private async Task RefreshConfigurationsAsync()
+{
+    try
+    {
+        var records = await _repository.GetByApplicationNameAsync(_applicationName);
+        var newCache = new ConcurrentDictionary&lt;string, ConfigurationRecord&gt;();
+        foreach (var record in records)
+            newCache[record.Name] = record;
+        Interlocked.Exchange(ref _cache, newCache);
+    }
+    catch (Exception ex)
+    {
+        // HATA: Cache'deki önceki değerleri KORU
+        _logger.LogWarning(ex,
+            "Failed to refresh. Cache will retain previous values.");
+    }
+}</code></pre>
+
+        <h3>RabbitMQ Hata Yönetimi</h3>
+        <ul>
+            <li>Publisher: Hata durumunda exception fırlatmaz, log yazar</li>
+            <li>Consumer: <code>BasicNack</code> ile mesajı tekrar kuyruğa atar</li>
+            <li>Bağlantı kopması: <code>AutomaticRecoveryEnabled = true</code> ile otomatik yeniden bağlanma</li>
+        </ul>
+
+        <h3>Exponential Backoff</h3>
+        <p>Basit retry stratejisi:</p>
+        <ul>
+            <li>İlk deneme: anında</li>
+            <li>Sonraki denemeler: üstel gecikme</li>
+            <li>Maksimum deneme sayısı: yapılandırılabilir</li>
+        </ul>
+    </section>
+
+    <!-- 15. Design Patterns -->
+    <section id="design-patterns">
+        <h2>15. Design Patterns</h2>
+
+        <h3>Kullanılan Patterns</h3>
+<table>
+<tr><th>Pattern</th><th>Nerede Kullanıldı</th><th>Neden?</th></tr>
+<tr><td><strong>Clean Architecture</strong></td><td>Tüm proje yapısı</td><td>Sorumlulukların ayrılması, test edilebilirlik</td></tr>
+<tr><td><strong>Repository Pattern</strong></td><td>IConfigurationRepository</td><td>Data access soyutlaması</td></tr>
+<tr><td><strong>Dependency Injection</strong></td><td>Tüm servisler</td><td>Loosely coupled, test edilebilir</td></tr>
+<tr><td><strong>Options Pattern</strong></td><td>ConfigurationSettings, BrokerSettings</td><td>Tipli konfigürasyon yönetimi</td></tr>
+<tr><td><strong>Background Service</strong></td><td>ConfigurationRefreshService, SeedDataService, BrokerConsumer</td><td>Periyodik işlemler</td></tr>
+<tr><td><strong>Service Layer</strong></td><td>ConfigurationService</td><td>İş mantığı izolasyonu</td></tr>
+</table>
+
+        <h3>SOLID Prensipleri</h3>
+        <ul>
+            <li><strong>S (Single Responsibility):</strong> Her sınıfın tek bir sorumluluğu var</li>
+            <li><strong>O (Open/Closed):</strong> Yeni storage eklemek için repository interface'ini implemente etmek yeterli</li>
+            <li><strong>L (Liskov Substitution):</strong> Repository mock ile test edilebilir</li>
+            <li><strong>I (Interface Segregation):</strong> Küçük, odaklı interface'ler</li>
+            <li><strong>D (Dependency Inversion):</strong> Bağımlılıklar abstract interface'lere</li>
+        </ul>
+    </section>
+
+    <!-- 16. Technical Decisions -->
+    <section id="decisions">
+        <h2>16. Teknik Kararlar</h2>
+
+        <h3>MongoDB vs SQL Server vs Redis</h3>
+        <table>
+            <tr><th>Kriter</th><th>MongoDB</th><th>SQL Server</th><th>Redis</th></tr>
+            <tr><td>Schema esnekliği</td><td>✅ Yüksek</td><td>❌ Düşük</td><td>✅ Yüksek</td></tr>
+            <tr><td>Sorgulama gücü</td><td>✅ İyi</td><td>✅ En iyi</td><td>❌ Sınırlı</td></tr>
+            <tr><td>Deployment kolaylığı</td><td>✅ Docker image</td><td>❌ Lisans</td><td>✅ Docker image</td></tr>
+            <tr><td>Persistence</td><td>✅ Kalıcı</td><td>✅ Kalıcı</td><td>⚠️ Volatile</td></tr>
+            <tr><td>Scalability</td><td>✅ Sharding</td><td>⚠️ Zor</td><td>✅ Cluster</td></tr>
+        </table>
+        <p><strong>Karar:</strong> MongoDB — esnek schema, kolay deployment, iyi .NET desteği.</p>
+
+        <h3>ConcurrentDictionary vs MemoryCache</h3>
+        <table>
+            <tr><th>Kriter</th><th>ConcurrentDictionary</th><th>MemoryCache</th></tr>
+            <tr><td>Dış bağımlılık</td><td>✅ Yok</td><td>❌ Microsoft.Extensions.Caching</td></tr>
+            <tr><td>Control</td><td>✅ Tam kontrol</td><td>⚠️ Framework'e bağımlı</td></tr>
+            <tr><td>Otomatik temizleme</td><td>❌ Manuel</td><td>✅ Built-in</td></tr>
+            <tr><td>Performans</td><td>✅ O(1)</td><td>✅ O(1)</td></tr>
+        </table>
+        <p><strong>Karar:</strong> ConcurrentDictionary — sıfır bağımlılık, tam kontrol.</p>
+
+        <h3>BackgroundService vs Timer</h3>
+        <p><strong>Karar:</strong> BackgroundService + PeriodicTimer — graceful shutdown, DI entegrasyonu.</p>
+
+        <h3>Polling + Broker (Neden İkisi?)</h3>
+        <ul>
+            <li><strong>Polling tek başına yeterli</strong> — broker çökse bile çalışır</li>
+            <li><strong>Broker tek başına yetersiz</strong> — bağlantı koparsa polling devam eder</li>
+            <li><strong>Production gerçeği:</strong> Hiçbir broker %100 güvenilir değildir</li>
+        </ul>
+    </section>
+
+    <!-- 17. Requirements Matrix -->
+    <section id="requirements-matrix">
+        <h2>17. Gereksinim Matrisi</h2>
+        <p>Case dokümanındaki tüm gereksinimler ve durumları:</p>
+
+        <h3>Temel Gereksinimler</h3>
+<table>
+<tr><th>#</th><th>Gereksinim</th><th>Durum</th><th>Implementasyon</th></tr>
+<tr><td>1</td><td>Konfigürasyon kaydı yapısı (Id, Name, Type, Value, IsActive, ApplicationName)</td><td><span class="badge badge-green">✅</span></td><td>ConfigurationRecord.cs</td></tr>
+<tr><td>2</td><td>.NET 8 kütüphanesi (DLL)</td><td><span class="badge badge-green">✅</span></td><td>Configuration.Library — net8.0</td></tr>
+<tr><td>3</td><td>3 parametre ile initialize</td><td><span class="badge badge-green">✅</span></td><td>ConfigurationReader(appName, connStr, interval)</td></tr>
+<tr><td>4</td><td><code>T GetValue&lt;T&gt;(string key)</code> generic method</td><td><span class="badge badge-green">✅</span></td><td>ConfigurationReader.cs</td></tr>
+<tr><td>5</td><td>string, int, double, boolean tip desteği</td><td><span class="badge badge-green">✅</span></td><td>ConvertValue&lt;T&gt;()</td></tr>
+<tr><td>6</td><td>Service isolation (her servis sadece kendi kayıtlarını görür)</td><td><span class="badge badge-green">✅</span></td><td>GetByApplicationNameAsync()</td></tr>
+<tr><td>7</td><td>Yalnızca IsActive=1 kayıtları döner</td><td><span class="badge badge-green">✅</span></td><td>Repository + Reader filtresi</td></tr>
+<tr><td>8</td><td>Periyodik yenileme (parametrik süre)</td><td><span class="badge badge-green">✅</span></td><td>ConfigurationRefreshService + PeriodicTimer</td></tr>
+<tr><td>9</td><td>Storage erişilemezse son başarılı cache ile devam</td><td><span class="badge badge-green">✅</span></td><td>Graceful degradation</td></tr>
+</table>
+
+        <h3>Web Arayüzü</h3>
+<table>
+<tr><th>#</th><th>Gereksinim</th><th>Durum</th><th>Implementasyon</th></tr>
+<tr><td>10</td><td>Kayıtları listeleme</td><td><span class="badge badge-green">✅</span></td><td>Admin Panel Index</td></tr>
+<tr><td>11</td><td>Kayıt güncelleme</td><td><span class="badge badge-green">✅</span></td><td>Admin Panel Edit</td></tr>
+<tr><td>12</td><td>Yeni kayıt ekleme</td><td><span class="badge badge-green">✅</span></td><td>Admin Panel Create</td></tr>
+<tr><td>13</td><td>Client-side Name filtreleme</td><td><span class="badge badge-green">✅</span></td><td>JavaScript keyup event</td></tr>
+</table>
+
+        <h3>Ekstra Puan</h3>
+<table>
+<tr><th>#</th><th>Kriter</th><th>Durum</th><th>Implementasyon</th></tr>
+<tr><td>14</td><td>Message Broker (RabbitMQ)</td><td><span class="badge badge-green">✅</span></td><td>Publisher + Consumer</td></tr>
+<tr><td>15</td><td>TPL, async/await</td><td><span class="badge badge-green">✅</span></td><td>Tüm asenkron işlemler</td></tr>
+<tr><td>16</td><td>Concurrency handling</td><td><span class="badge badge-green">✅</span></td><td>ConcurrentDictionary + Interlocked</td></tr>
+<tr><td>17</td><td>Design & Architectural Patterns</td><td><span class="badge badge-green">✅</span></td><td>Clean Architecture, SOLID, Repository, DI</td></tr>
+<tr><td>18</td><td>TDD</td><td><span class="badge badge-green">✅</span></td><td>Test-driven development</td></tr>
+<tr><td>19</td><td>Unit Tests</td><td><span class="badge badge-green">✅</span></td><td>39 test — xUnit + Moq</td></tr>
+<tr><td>20</td><td>MongoDB</td><td><span class="badge badge-green">✅</span></td><td>MongoDB 7.0</td></tr>
+<tr><td>21</td><td>Çalışır Proje</td><td><span class="badge badge-green">✅</span></td><td>docker-compose up -d</td></tr>
+<tr><td>22</td><td>Dokümantasyon</td><td><span class="badge badge-green">✅</span></td><td>README.md + Documentation.html</td></tr>
+<tr><td>23</td><td>Source Control</td><td><span class="badge badge-green">✅</span></td><td>GitHub</td></tr>
+<tr><td>24</td><td>Docker Compose</td><td><span class="badge badge-green">✅</span></td><td>4 container</td></tr>
+</table>
+
+        <div class="info-box success">
+            <strong>Sonuç</strong>
+            Tüm gereksinimler (24/24) karşılanmıştır. Ekstra puan kriterlerinin tamamı uygulanmıştır.
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    <div class="container">
+        <p>Dynamic Configuration System — Teknik Dokümantasyon</p>
+        <p>.NET 8 | MongoDB | RabbitMQ | Clean Architecture | Docker</p>
+    </div>
+</footer>
+
+</body>
+</html>

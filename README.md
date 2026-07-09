@@ -2,6 +2,8 @@
 
 .NET 8 ile yazılmış, MongoDB storage, in-memory cache ve otomatik arka plan yenileme desteği sunan dinamik konfigürasyon yönetim sistemi.
 
+**Detaylı teknik doküman için:** [Documentation.html](Documentation.html)
+
 ## Hızlı Başlangıç
 
 **Tek gereklilik: Docker Desktop**
