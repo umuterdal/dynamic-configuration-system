@@ -415,7 +415,8 @@ docker ps</code></pre>
         <table>
             <tr><th>Servis</th><th>URL</th><th>Açıklama</th></tr>
             <tr><td>Admin Panel</td><td><code>http://localhost:5000</code></td><td>CRUD yönetimi</td></tr>
-            <tr><td>Demo API</td><td><code>http://localhost:5001/swagger</code></td><td>Swagger UI</td></tr>
+            <tr><td>Demo API - SERVICE-A</td><td><code>http://localhost:5001/swagger</code></td><td>Swagger UI (SERVICE-A)</td></tr>
+            <tr><td>Demo API - SERVICE-B</td><td><code>http://localhost:5002/swagger</code></td><td>Swagger UI (SERVICE-B)</td></tr>
             <tr><td>RabbitMQ</td><td><code>http://localhost:15672</code></td><td>Management UI (guest/guest)</td></tr>
             <tr><td>MongoDB</td><td><code>localhost:27017</code></td><td>Database connection</td></tr>
         </table>
@@ -783,6 +784,10 @@ curl http://localhost:5001/api/demo/health</code></pre>
 <tr><td>TaxRate</td><td>double</td><td>0.18</td><td>1 (aktif)</td><td>SERVICE-A</td></tr>
 <tr><td>IsBasketEnabled</td><td>bool</td><td>true</td><td>1 (aktif)</td><td>SERVICE-A</td></tr>
 <tr><td>MaintenanceMode</td><td>bool</td><td>false</td><td>0 (pasif)</td><td>SERVICE-A</td></tr>
+<tr><td>IsBasketEnabled</td><td>bool</td><td>true</td><td>1 (aktif)</td><td>SERVICE-B</td></tr>
+<tr><td>MaxOrderCount</td><td>int</td><td>100</td><td>1 (aktif)</td><td>SERVICE-B</td></tr>
+<tr><td>Currency</td><td>string</td><td>TRY</td><td>1 (aktif)</td><td>SERVICE-B</td></tr>
+<tr><td>PaymentGateway</td><td>string</td><td>iyzico</td><td>1 (aktif)</td><td>SERVICE-B</td></tr>
 </table>
 
         <h3>Idempotent Tasarım</h3>
@@ -813,7 +818,7 @@ if (existing.Count > 0)
     <!-- 12. Docker -->
     <section id="docker">
         <h2>12. Docker Orchestration</h2>
-        <p><code>docker-compose.yml</code> 4 container ile tam bir ortam sağlar.</p>
+        <p><code>docker-compose.yml</code> 5 container ile tam bir ortam sağlar.</p>
 
         <h3>Container'lar</h3>
 <table>
@@ -822,6 +827,7 @@ if (existing.Count > 0)
 <tr><td>configuration-rabbitmq</td><td>rabbitmq:3-management</td><td>5672, 15672</td><td><code>rabbitmq-diagnostics check_port_connectivity</code></td></tr>
 <tr><td>configuration-admin</td><td>Özel build</td><td>5000</td><td><code>curl -f http://localhost:8080/</code></td></tr>
 <tr><td>configuration-demoapi</td><td>Özel build</td><td>5001</td><td><code>curl -f http://localhost:8080/swagger/index.html</code></td></tr>
+<tr><td>configuration-demoapi-b</td><td>Özel build</td><td>5002</td><td><code>curl -f http://localhost:8080/swagger/index.html</code></td></tr>
 </table>
 
         <h3>Dependency Zinciri</h3>
@@ -1058,7 +1064,7 @@ dotnet test --collect:"XPlat Code Coverage"</code></pre>
 <tr><td>21</td><td>Çalışır Proje</td><td><span class="badge badge-green">✅</span></td><td>docker-compose up -d</td></tr>
 <tr><td>22</td><td>Dokümantasyon</td><td><span class="badge badge-green">✅</span></td><td>README.md + Documentation.html</td></tr>
 <tr><td>23</td><td>Source Control</td><td><span class="badge badge-green">✅</span></td><td>GitHub</td></tr>
-<tr><td>24</td><td>Docker Compose</td><td><span class="badge badge-green">✅</span></td><td>4 container</td></tr>
+<tr><td>24</td><td>Docker Compose</td><td><span class="badge badge-green">✅</span></td><td>5 container</td></tr>
 </table>
 
         <div class="info-box success">

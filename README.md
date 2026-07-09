@@ -17,7 +17,8 @@ docker-compose up -d
 | Servis | URL |
 |--------|-----|
 | Admin Panel | http://localhost:5000 |
-| Demo API (Swagger) | http://localhost:5001/swagger |
+| Demo API - SERVICE-A (Swagger) | http://localhost:5001/swagger |
+| Demo API - SERVICE-B (Swagger) | http://localhost:5002/swagger |
 | RabbitMQ Management | http://localhost:15672 (guest/guest) |
 
 Durdurmak için:
@@ -125,4 +126,4 @@ Configuration.DemoApi       → Swagger'lı Demo API
 | Çalışır Proje | ✅ docker-compose up -d |
 | Dokümantasyon | ✅ README.md |
 | Source Control | ✅ GitHub |
-| Docker Compose | ✅ 4 container |
+| Docker Compose | ✅ 5 container |
