@@ -140,7 +140,13 @@
             });
         });
 
-        // Auto-refresh: polling ile her 30sn'de bir tabloyu güncelle
+        function escapeHtml(str) {
+            if (!str) return '';
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
         (function () {
             var applicationName = '@applicationName';
             var tbody = document.getElementById('configurationTable');
@@ -162,27 +168,25 @@
                                 ? '<span class="badge-active"><i class="bi bi-check-circle-fill me-1"></i>Active</span>'
                                 : '<span class="badge-inactive"><i class="bi bi-x-circle-fill me-1"></i>Inactive</span>';
                             html += '<tr>'
-                                + '<td class="id-cell" title="' + item.id + '">' + item.id + '</td>'
-                                + '<td class="fw-medium">' + item.name + '</td>'
-                                + '<td class="type-cell">' + item.type + '</td>'
-                                + '<td class="value-cell" title="' + item.value + '">' + item.value + '</td>'
+                                + '<td class="id-cell" title="' + escapeHtml(item.id) + '">' + escapeHtml(item.id) + '</td>'
+                                + '<td class="fw-medium">' + escapeHtml(item.name) + '</td>'
+                                + '<td class="type-cell">' + escapeHtml(item.type) + '</td>'
+                                + '<td class="value-cell" title="' + escapeHtml(item.value) + '">' + escapeHtml(item.value) + '</td>'
                                 + '<td>' + status + '</td>'
-                                + '<td><span class="text-muted">' + item.applicationName + '</span></td>'
+                                + '<td><span class="text-muted">' + escapeHtml(item.applicationName) + '</span></td>'
                                 + '<td><div class="action-btns">'
-                                + '<a href="/Configuration/Edit?id=' + item.id + '" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a> '
-                                + '<a href="/Configuration/Delete?id=' + item.id + '" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>'
+                                + '<a href="/Configuration/Edit?id=' + encodeURIComponent(item.id) + '" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a> '
+                                + '<a href="/Configuration/Delete?id=' + encodeURIComponent(item.id) + '" class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-trash"></i></a>'
                                 + '</div></td></tr>';
                         });
                         tbody.innerHTML = html;
 
-                        // Sayı bilgisini güncelle
                         var countEl = document.querySelector('.text-muted.small');
                         if (countEl) countEl.innerHTML = '<i class="bi bi-info-circle me-1"></i>' + data.length + ' record(s)';
                     })
-                    .catch(function () { /* hata olursa sessizce geç */ });
+                    .catch(function () { });
             }
 
-            // Her 30sn'de bir yenile
             setInterval(refreshTable, 30000);
         })();
     </script>

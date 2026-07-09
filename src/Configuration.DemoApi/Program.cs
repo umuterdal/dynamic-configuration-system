@@ -58,7 +58,15 @@ builder.Services.AddConfigurationBrokerConsumer(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-app.UseExceptionHandler("/error");
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { error = "Internal server error" });
+    });
+});
 
 if (app.Environment.IsDevelopment())
 {

@@ -28,8 +28,11 @@ builder.Services.AddApplicationServices();
 // Add ConfigurationReader (for health checks in footer)
 builder.Services.AddConfigurationReader(builder.Configuration);
 
-// Add RabbitMQ broker publisher (sends change events for instant consumer refresh)
-builder.Services.AddConfigurationBroker(builder.Configuration);
+// Add RabbitMQ broker publisher (optional — admin works without it)
+if (builder.Configuration.GetSection("ConfigurationBroker").Exists())
+{
+    builder.Services.AddConfigurationBroker(builder.Configuration);
+}
 
 // Add seed data service (seeds initial data on startup if database is empty)
 builder.Services.AddHostedService<SeedDataService>();

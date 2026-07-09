@@ -13,7 +13,7 @@ namespace Configuration.Admin.Controllers;
 public class ConfigurationController : Controller
 {
     private readonly IConfigurationService _configurationService;
-    private readonly IConfigurationBrokerPublisher _brokerPublisher;
+    private readonly IConfigurationBrokerPublisher? _brokerPublisher;
     private readonly ConfigurationReader? _configurationReader;
     private readonly ILogger<ConfigurationController> _logger;
 
@@ -21,17 +21,17 @@ public class ConfigurationController : Controller
     /// Initializes a new instance of the ConfigurationController.
     /// </summary>
     /// <param name="configurationService">The configuration service.</param>
-    /// <param name="brokerPublisher">The broker publisher for change events.</param>
+    /// <param name="brokerPublisher">Optional broker publisher for change events.</param>
     /// <param name="configurationReader">Optional configuration reader for health checks.</param>
     /// <param name="logger">Logger instance.</param>
     public ConfigurationController(
         IConfigurationService configurationService,
-        IConfigurationBrokerPublisher brokerPublisher,
         ILogger<ConfigurationController> logger,
+        IConfigurationBrokerPublisher? brokerPublisher = null,
         ConfigurationReader? configurationReader = null)
     {
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
-        _brokerPublisher = brokerPublisher ?? throw new ArgumentNullException(nameof(brokerPublisher));
+        _brokerPublisher = brokerPublisher;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configurationReader = configurationReader;
     }
@@ -73,8 +73,8 @@ public class ConfigurationController : Controller
         {
             await _configurationService.CreateAsync(request, cancellationToken);
 
-            // Publish change event for instant consumer refresh
-            await _brokerPublisher.PublishAsync(request.ApplicationName, "Created", cancellationToken);
+            if (_brokerPublisher != null)
+                await _brokerPublisher.PublishAsync(request.ApplicationName, "Created", cancellationToken);
 
             TempData["SuccessMessage"] = "Configuration created successfully.";
             return RedirectToAction(nameof(Index), new { applicationName = request.ApplicationName });
@@ -125,8 +125,8 @@ public class ConfigurationController : Controller
         {
             await _configurationService.UpdateAsync(request, cancellationToken);
 
-            // Publish change event for instant consumer refresh
-            await _brokerPublisher.PublishAsync(request.ApplicationName, "Updated", cancellationToken);
+            if (_brokerPublisher != null)
+                await _brokerPublisher.PublishAsync(request.ApplicationName, "Updated", cancellationToken);
 
             TempData["SuccessMessage"] = "Configuration updated successfully.";
             return RedirectToAction(nameof(Index), new { applicationName = request.ApplicationName });
@@ -163,8 +163,7 @@ public class ConfigurationController : Controller
             var record = await _configurationService.GetByIdAsync(id, cancellationToken);
             await _configurationService.DeleteAsync(id, cancellationToken);
 
-            // Publish change event for instant consumer refresh
-            if (record != null)
+            if (_brokerPublisher != null && record != null)
                 await _brokerPublisher.PublishAsync(record.ApplicationName, "Deleted", cancellationToken);
 
             TempData["SuccessMessage"] = "Configuration deleted successfully.";

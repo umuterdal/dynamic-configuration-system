@@ -404,5 +404,6 @@ public sealed class ConfigurationReader : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        (_mongoClient as IDisposable)?.Dispose();
     }
 }
