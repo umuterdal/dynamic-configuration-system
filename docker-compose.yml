@@ -108,6 +108,40 @@ services:
     networks:
       - config-network
 
+  configuration-demoapi-b:
+    build:
+      context: .
+      dockerfile: src/Configuration.DemoApi/Dockerfile
+    container_name: configuration-demoapi-b
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConfigurationReader__ConnectionString=mongodb://admin:password123@mongodb:27017
+      - ConfigurationReader__ApplicationName=SERVICE-B
+      - ConfigurationReader__DatabaseName=ConfigurationDb
+      - ConfigurationReader__CollectionName=Configurations
+      - ConfigurationReader__RefreshTimerIntervalInMs=30000
+      - ConfigurationBroker__HostName=rabbitmq
+      - ConfigurationBroker__Port=5672
+      - ConfigurationBroker__UserName=guest
+      - ConfigurationBroker__Password=guest
+      - ConfigurationBroker__ExchangeName=config-changes
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/swagger/index.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - config-network
+
 volumes:
   mongodb_data:
   rabbitmq_data:
