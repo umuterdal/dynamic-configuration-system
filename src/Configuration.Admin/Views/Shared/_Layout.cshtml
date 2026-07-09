@@ -64,12 +64,15 @@
                 .then(function (data) {
                     if (data.mongoDB === 'healthy') {
                         el.style.color = '#16a34a';
+                        el.innerHTML = 'MongoDB <i class="bi bi-check-circle-fill ms-1"></i>';
                     } else {
                         el.style.color = '#dc2626';
+                        el.innerHTML = 'MongoDB <i class="bi bi-x-circle-fill ms-1"></i>';
                     }
                 })
                 .catch(function () {
                     el.style.color = '#dc2626';
+                    el.innerHTML = 'MongoDB <i class="bi bi-x-circle-fill ms-1"></i>';
                 });
         })();
     </script>
