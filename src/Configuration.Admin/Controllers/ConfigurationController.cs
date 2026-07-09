@@ -199,4 +199,25 @@ public class ConfigurationController : Controller
             return Json(new { MongoDB = "unhealthy" });
         }
     }
+
+    /// <summary>
+    /// Returns configurations as JSON for auto-refresh polling.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetConfigurations(string? applicationName, CancellationToken cancellationToken)
+    {
+        var configurations = string.IsNullOrWhiteSpace(applicationName)
+            ? await _configurationService.GetAllConfigurationsAsync(cancellationToken)
+            : await _configurationService.GetConfigurationsByApplicationAsync(applicationName, cancellationToken);
+
+        return Json(configurations.Select(c => new
+        {
+            c.Id,
+            c.Name,
+            c.Type,
+            c.Value,
+            c.IsActive,
+            c.ApplicationName
+        }));
+    }
 }
