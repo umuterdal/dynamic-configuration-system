@@ -1,6 +1,7 @@
 using Configuration.Application.Extensions;
 using Configuration.Infrastructure.Extensions;
 using Configuration.Infrastructure.Services;
+using Configuration.Library.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,9 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Add Application services
 builder.Services.AddApplicationServices();
+
+// Add ConfigurationReader (for health checks in footer)
+builder.Services.AddConfigurationReader(builder.Configuration);
 
 // Add RabbitMQ broker publisher (sends change events for instant consumer refresh)
 builder.Services.AddConfigurationBroker(builder.Configuration);

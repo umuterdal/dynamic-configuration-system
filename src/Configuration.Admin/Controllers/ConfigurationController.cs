@@ -1,6 +1,7 @@
 using Configuration.Application.Services;
 using Configuration.Domain.DTOs;
 using Configuration.Domain.Interfaces;
+using Configuration.Library;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Configuration.Admin.Controllers;
@@ -13,6 +14,7 @@ public class ConfigurationController : Controller
 {
     private readonly IConfigurationService _configurationService;
     private readonly IConfigurationBrokerPublisher _brokerPublisher;
+    private readonly ConfigurationReader? _configurationReader;
     private readonly ILogger<ConfigurationController> _logger;
 
     /// <summary>
@@ -20,15 +22,18 @@ public class ConfigurationController : Controller
     /// </summary>
     /// <param name="configurationService">The configuration service.</param>
     /// <param name="brokerPublisher">The broker publisher for change events.</param>
+    /// <param name="configurationReader">Optional configuration reader for health checks.</param>
     /// <param name="logger">Logger instance.</param>
     public ConfigurationController(
         IConfigurationService configurationService,
         IConfigurationBrokerPublisher brokerPublisher,
-        ILogger<ConfigurationController> logger)
+        ILogger<ConfigurationController> logger,
+        ConfigurationReader? configurationReader = null)
     {
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         _brokerPublisher = brokerPublisher ?? throw new ArgumentNullException(nameof(brokerPublisher));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configurationReader = configurationReader;
     }
 
     /// <summary>
@@ -170,6 +175,28 @@ public class ConfigurationController : Controller
             _logger.LogError(ex, "Error deleting configuration {Id}", id);
             TempData["ErrorMessage"] = "An error occurred while deleting the configuration.";
             return RedirectToAction(nameof(Index));
+        }
+    }
+
+    /// <summary>
+    /// Gets system health status for the admin panel footer.
+    /// Returns MongoDB connectivity status.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> Health()
+    {
+        try
+        {
+            if (_configurationReader != null)
+            {
+                var healthInfo = await _configurationReader.GetHealthInfoAsync();
+                return Json(healthInfo);
+            }
+            return Json(new { MongoDB = "not_configured" });
+        }
+        catch
+        {
+            return Json(new { MongoDB = "unhealthy" });
         }
     }
 }
