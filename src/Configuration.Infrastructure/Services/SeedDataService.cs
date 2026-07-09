@@ -54,6 +54,7 @@ public sealed class SeedDataService : BackgroundService
     {
         return new List<ConfigurationRecord>
         {
+            // SERVICE-A configurations
             new()
             {
                 Name = "SiteName",
@@ -93,6 +94,40 @@ public sealed class SeedDataService : BackgroundService
                 Value = "false",
                 IsActive = 0,
                 ApplicationName = "SERVICE-A"
+            },
+
+            // SERVICE-B configurations
+            new()
+            {
+                Name = "IsBasketEnabled",
+                Type = "bool",
+                Value = "true",
+                IsActive = 1,
+                ApplicationName = "SERVICE-B"
+            },
+            new()
+            {
+                Name = "MaxOrderCount",
+                Type = "int",
+                Value = "100",
+                IsActive = 1,
+                ApplicationName = "SERVICE-B"
+            },
+            new()
+            {
+                Name = "Currency",
+                Type = "string",
+                Value = "TRY",
+                IsActive = 1,
+                ApplicationName = "SERVICE-B"
+            },
+            new()
+            {
+                Name = "PaymentGateway",
+                Type = "string",
+                Value = "iyzico",
+                IsActive = 1,
+                ApplicationName = "SERVICE-B"
             }
         };
     }
