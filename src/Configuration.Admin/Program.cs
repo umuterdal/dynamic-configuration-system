@@ -1,7 +1,5 @@
 using Configuration.Application.Extensions;
 using Configuration.Infrastructure.Extensions;
-using Configuration.Library.Extensions;
-using Configuration.Library.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,9 +22,6 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Add Application services
 builder.Services.AddApplicationServices();
-
-// Add BackgroundService for periodic refresh
-builder.Services.AddHostedService<ConfigurationRefreshService>();
 
 var app = builder.Build();
 

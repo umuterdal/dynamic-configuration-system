@@ -1,22 +1,407 @@
+/* ============================================
+   Dynamic Configuration - Admin Panel Styles
+   ============================================ */
+
+:root {
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-success: #16a34a;
+    --color-danger: #dc2626;
+    --color-warning: #f59e0b;
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
+    --color-text: #1e293b;
+    --color-text-muted: #64748b;
+    --color-navbar: #0f172a;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+}
+
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 15px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+/* ---- Base ---- */
+html, body {
+    height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+/* ---- Focus States ---- */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
+.form-control:focus, .form-check-input:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    border-color: var(--color-primary);
+}
+
+/* ---- Navbar ---- */
+.navbar {
+    padding: 0.6rem 0;
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+}
+
+.navbar .nav-link {
+    font-size: 0.875rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease;
+}
+
+.navbar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ---- Page Header ---- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.page-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* ---- Cards ---- */
+.card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    background: var(--color-surface);
+}
+
+.card-header {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+}
+
+/* ---- Tables ---- */
+.table-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.table > thead {
+    background-color: var(--color-navbar);
+}
+
+.table > thead th {
+    color: #f1f5f9;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.75rem 1rem;
+    border: none;
+    white-space: nowrap;
+}
+
+.table > tbody tr {
+    transition: background-color 0.1s ease;
+}
+
+.table > tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+.table > tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.table td.id-cell {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table td.type-cell {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.8125rem;
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.table td.value-cell {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.8125rem;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Badges ---- */
+.badge-active {
+    color: var(--color-success);
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+.badge-inactive {
+    color: var(--color-danger);
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+/* ---- Buttons ---- */
+.btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.9rem;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+.btn-sm {
+    font-size: 0.8125rem;
+    padding: 0.3rem 0.65rem;
+}
+
+.btn-outline-primary {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.btn-danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.btn-warning {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: #000;
+}
+
+/* Action buttons group */
+.action-btns {
+    display: flex;
+    gap: 0.375rem;
+}
+
+/* ---- Forms ---- */
+.form-card {
+    max-width: 640px;
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--color-text);
+    margin-bottom: 0.35rem;
+}
+
+.form-control, .form-select {
+    border-radius: var(--radius-sm);
+    border-color: var(--color-border);
+    font-size: 0.9375rem;
+    padding: 0.5rem 0.75rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-primary);
+}
+
+.form-text {
+    font-size: 0.8125rem;
+}
+
+/* ---- Filter Bar ---- */
+.filter-bar {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-bar .form-control {
+    font-size: 0.875rem;
+}
+
+/* ---- Alerts ---- */
+.alert {
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+}
+
+.alert-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* ---- Delete Confirmation ---- */
+.delete-card {
+    max-width: 480px;
+}
+
+.delete-card .card-body {
+    padding: 1.5rem;
+}
+
+.delete-card dt {
+    font-weight: 500;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+}
+
+.delete-card dd {
+    font-weight: 500;
+    color: var(--color-text);
+    font-size: 0.9375rem;
+    margin-bottom: 0.75rem;
+}
+
+.delete-icon {
+    width: 48px;
+    height: 48px;
+    background-color: #fee2e2;
+    color: var(--color-danger);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* ---- Footer ---- */
+.footer {
+    font-size: 0.8125rem;
+}
+
+/* ---- Empty State ---- */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--color-text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    opacity: 0.5;
+}
+
+/* ---- Validation ---- */
+.text-danger {
+    font-size: 0.8125rem;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .table-responsive {
+        font-size: 0.8125rem;
+    }
+
+    .action-btns {
+        flex-direction: column;
+    }
+
+    .filter-bar .row {
+        flex-direction: column;
+    }
+
+    .filter-bar .col-auto {
+        width: 100%;
+    }
+}
+
+/* ---- Scrollbar (Webkit) ---- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }

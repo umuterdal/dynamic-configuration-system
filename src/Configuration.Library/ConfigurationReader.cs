@@ -8,26 +8,25 @@ using Microsoft.Extensions.Logging;
 namespace Configuration.Library;
 
 /// <summary>
-/// Thread-safe configuration reader with in-memory cache and automatic refresh.
-/// This is the main public API for consuming configuration values.
+/// Thread-safe configuration reader with in-memory cache.
+/// Refresh is handled externally by ConfigurationRefreshService (BackgroundService).
 /// </summary>
 public sealed class ConfigurationReader : IDisposable
 {
     private readonly string _applicationName;
     private readonly IConfigurationRepository _repository;
     private readonly ILogger<ConfigurationReader> _logger;
-    private readonly ConcurrentDictionary<string, ConfigurationRecord> _cache;
-    private readonly Timer? _refreshTimer;
-    private readonly TimeSpan _refreshInterval;
+    private ConcurrentDictionary<string, ConfigurationRecord> _cache;
+    private int _refreshing;
     private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the ConfigurationReader.
-    /// Loads initial configuration and starts periodic refresh.
+    /// Loads initial configuration from the repository.
     /// </summary>
     /// <param name="applicationName">The application name for service isolation.</param>
     /// <param name="repository">The configuration repository for data access.</param>
-    /// <param name="refreshTimerIntervalInMs">Refresh interval in milliseconds.</param>
+    /// <param name="refreshTimerIntervalInMs">Refresh interval in milliseconds (used by BackgroundService).</param>
     /// <param name="logger">Logger instance.</param>
     public ConfigurationReader(
         string applicationName,
@@ -43,17 +42,8 @@ public sealed class ConfigurationReader : IDisposable
         if (refreshTimerIntervalInMs <= 0)
             throw new ArgumentOutOfRangeException(nameof(refreshTimerIntervalInMs), "Refresh interval must be positive.");
 
-        _refreshInterval = TimeSpan.FromMilliseconds(refreshTimerIntervalInMs);
-
         // Initial load - synchronous to ensure cache is populated before first access
         LoadConfigurationsAsync().GetAwaiter().GetResult();
-
-        // Start periodic refresh timer
-        _refreshTimer = new Timer(
-            async _ => await RefreshConfigurationsAsync(),
-            null,
-            _refreshInterval,
-            _refreshInterval);
 
         _logger.LogInformation(
             "ConfigurationReader initialized for application {ApplicationName} with {Interval}ms refresh interval",
@@ -114,7 +104,12 @@ public sealed class ConfigurationReader : IDisposable
             value = ConvertValue<T>(record.Value, record.Type, key);
             return true;
         }
-        catch
+        catch (InvalidCastException)
+        {
+            value = default;
+            return false;
+        }
+        catch (FormatException)
         {
             value = default;
             return false;
@@ -136,12 +131,25 @@ public sealed class ConfigurationReader : IDisposable
 
     /// <summary>
     /// Forces an immediate refresh of the configuration cache.
+    /// Thread-safe: concurrent calls are coalesced into a single refresh.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task RefreshAsync()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        await RefreshConfigurationsAsync();
+
+        // Prevent overlapping refreshes using interlocked compare-exchange
+        if (Interlocked.CompareExchange(ref _refreshing, 1, 0) != 0)
+            return;
+
+        try
+        {
+            await RefreshConfigurationsAsync();
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _refreshing, 0);
+        }
     }
 
     private async Task LoadConfigurationsAsync()
@@ -152,12 +160,15 @@ public sealed class ConfigurationReader : IDisposable
 
             var records = await _repository.GetByApplicationNameAsync(_applicationName);
 
-            // Clear and repopulate cache atomically
-            _cache.Clear();
+            // Build new cache content
+            var newCache = new ConcurrentDictionary<string, ConfigurationRecord>(StringComparer.OrdinalIgnoreCase);
             foreach (var record in records)
             {
-                _cache[record.Name] = record;
+                newCache[record.Name] = record;
             }
+
+            // Atomic swap: replace the entire cache reference
+            Interlocked.Exchange(ref _cache, newCache);
 
             _logger.LogInformation(
                 "Loaded {Count} active configurations for application {ApplicationName}",
@@ -182,25 +193,15 @@ public sealed class ConfigurationReader : IDisposable
 
             var records = await _repository.GetByApplicationNameAsync(_applicationName);
 
-            // Create new cache content
-            var newCache = new Dictionary<string, ConfigurationRecord>(StringComparer.OrdinalIgnoreCase);
+            // Build new cache content
+            var newCache = new ConcurrentDictionary<string, ConfigurationRecord>(StringComparer.OrdinalIgnoreCase);
             foreach (var record in records)
             {
                 newCache[record.Name] = record;
             }
 
-            // Atomic swap: clear old entries and add new ones
-            // This minimizes lock contention while maintaining consistency
-            var keysToRemove = _cache.Keys.Where(k => !newCache.ContainsKey(k)).ToList();
-            foreach (var key in keysToRemove)
-            {
-                _cache.TryRemove(key, out _);
-            }
-
-            foreach (var kvp in newCache)
-            {
-                _cache[kvp.Key] = kvp.Value;
-            }
+            // Atomic swap: replace the entire cache reference
+            Interlocked.Exchange(ref _cache, newCache);
 
             _logger.LogDebug(
                 "Refreshed {Count} configurations for application {ApplicationName}",
@@ -226,20 +227,19 @@ public sealed class ConfigurationReader : IDisposable
                 return (T)(object)value;
             }
 
-            var lowerType = type.ToLowerInvariant();
-            if (lowerType == "int")
+            if (string.Equals(type, "int", StringComparison.OrdinalIgnoreCase))
             {
                 return (T)(object)int.Parse(value, CultureInfo.InvariantCulture);
             }
-            else if (lowerType == "double")
+            else if (string.Equals(type, "double", StringComparison.OrdinalIgnoreCase))
             {
                 return (T)(object)double.Parse(value, CultureInfo.InvariantCulture);
             }
-            else if (lowerType == "bool")
+            else if (string.Equals(type, "bool", StringComparison.OrdinalIgnoreCase))
             {
                 return (T)(object)bool.Parse(value);
             }
-            else if (lowerType == "string")
+            else if (string.Equals(type, "string", StringComparison.OrdinalIgnoreCase))
             {
                 return (T)(object)value;
             }
@@ -259,10 +259,6 @@ public sealed class ConfigurationReader : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-
         _disposed = true;
-        _refreshTimer?.Dispose();
-
-        GC.SuppressFinalize(this);
     }
 }

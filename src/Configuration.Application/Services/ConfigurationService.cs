@@ -14,6 +14,11 @@ public sealed class ConfigurationService : IConfigurationService
     private readonly IConfigurationRepository _repository;
     private readonly ILogger<ConfigurationService> _logger;
 
+    private static readonly HashSet<string> ValidTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "string", "int", "double", "bool"
+    };
+
     /// <summary>
     /// Initializes a new instance of the ConfigurationService.
     /// </summary>
@@ -67,14 +72,7 @@ public sealed class ConfigurationService : IConfigurationService
 
         ValidateRequest(request);
 
-        var record = new ConfigurationRecord
-        {
-            Name = request.Name,
-            Type = request.Type,
-            Value = request.Value,
-            IsActive = request.IsActive,
-            ApplicationName = request.ApplicationName
-        };
+        var record = MapToRecord(request);
 
         _logger.LogInformation("Creating configuration {Name} for application {ApplicationName}",
             request.Name, request.ApplicationName);
@@ -122,41 +120,51 @@ public sealed class ConfigurationService : IConfigurationService
         return await _repository.DeleteAsync(id, cancellationToken);
     }
 
+    private static ConfigurationRecord MapToRecord(CreateConfigurationRequest request)
+    {
+        return new ConfigurationRecord
+        {
+            Name = request.Name,
+            Type = request.Type,
+            Value = request.Value,
+            IsActive = request.IsActive,
+            ApplicationName = request.ApplicationName
+        };
+    }
+
     private static void ValidateRequest(CreateConfigurationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-            throw new ArgumentException("Name cannot be null or empty.", nameof(request));
+            throw new ArgumentException("Name cannot be null or empty.", nameof(request.Name));
 
         if (string.IsNullOrWhiteSpace(request.Type))
-            throw new ArgumentException("Type cannot be null or empty.", nameof(request));
+            throw new ArgumentException("Type cannot be null or empty.", nameof(request.Type));
 
         if (string.IsNullOrWhiteSpace(request.Value))
-            throw new ArgumentException("Value cannot be null or empty.", nameof(request));
+            throw new ArgumentException("Value cannot be null or empty.", nameof(request.Value));
 
         if (string.IsNullOrWhiteSpace(request.ApplicationName))
-            throw new ArgumentException("ApplicationName cannot be null or empty.", nameof(request));
+            throw new ArgumentException("ApplicationName cannot be null or empty.", nameof(request.ApplicationName));
 
-        var validTypes = new[] { "string", "int", "double", "bool" };
-        if (!validTypes.Contains(request.Type.ToLowerInvariant()))
-            throw new ArgumentException($"Type must be one of: {string.Join(", ", validTypes)}", nameof(request));
+        if (!ValidTypes.Contains(request.Type))
+            throw new ArgumentException($"Type must be one of: {string.Join(", ", ValidTypes)}", nameof(request.Type));
     }
 
     private static void ValidateRequest(UpdateConfigurationRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-            throw new ArgumentException("Name cannot be null or empty.", nameof(request));
+            throw new ArgumentException("Name cannot be null or empty.", nameof(request.Name));
 
         if (string.IsNullOrWhiteSpace(request.Type))
-            throw new ArgumentException("Type cannot be null or empty.", nameof(request));
+            throw new ArgumentException("Type cannot be null or empty.", nameof(request.Type));
 
         if (string.IsNullOrWhiteSpace(request.Value))
-            throw new ArgumentException("Value cannot be null or empty.", nameof(request));
+            throw new ArgumentException("Value cannot be null or empty.", nameof(request.Value));
 
         if (string.IsNullOrWhiteSpace(request.ApplicationName))
-            throw new ArgumentException("ApplicationName cannot be null or empty.", nameof(request));
+            throw new ArgumentException("ApplicationName cannot be null or empty.", nameof(request.ApplicationName));
 
-        var validTypes = new[] { "string", "int", "double", "bool" };
-        if (!validTypes.Contains(request.Type.ToLowerInvariant()))
-            throw new ArgumentException($"Type must be one of: {string.Join(", ", validTypes)}", nameof(request));
+        if (!ValidTypes.Contains(request.Type))
+            throw new ArgumentException($"Type must be one of: {string.Join(", ", ValidTypes)}", nameof(request.Type));
     }
 }

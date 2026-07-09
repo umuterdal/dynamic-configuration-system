@@ -1,5 +1,4 @@
 using Configuration.Domain.Entities;
-using Configuration.Domain.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,10 +8,11 @@ namespace Configuration.Library.Services;
 /// <summary>
 /// Background service that periodically refreshes configuration cache.
 /// Uses PeriodicTimer for efficient and predictable scheduling.
+/// Calls ConfigurationReader.RefreshAsync() to update the in-memory cache.
 /// </summary>
 public sealed class ConfigurationRefreshService : BackgroundService
 {
-    private readonly IConfigurationRepository _repository;
+    private readonly ConfigurationReader _configurationReader;
     private readonly ILogger<ConfigurationRefreshService> _logger;
     private readonly ConfigurationSettings _settings;
     private readonly TimeSpan _refreshInterval;
@@ -20,15 +20,15 @@ public sealed class ConfigurationRefreshService : BackgroundService
     /// <summary>
     /// Initializes a new instance of the ConfigurationRefreshService.
     /// </summary>
-    /// <param name="repository">The configuration repository.</param>
+    /// <param name="configurationReader">The configuration reader to refresh.</param>
     /// <param name="settings">Configuration settings.</param>
     /// <param name="logger">Logger instance.</param>
     public ConfigurationRefreshService(
-        IConfigurationRepository repository,
+        ConfigurationReader configurationReader,
         IOptions<ConfigurationSettings> settings,
         ILogger<ConfigurationRefreshService> logger)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _configurationReader = configurationReader ?? throw new ArgumentNullException(nameof(configurationReader));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
 
@@ -56,7 +56,7 @@ public sealed class ConfigurationRefreshService : BackgroundService
 
                 try
                 {
-                    await RefreshConfigurationsAsync(stoppingToken);
+                    await _configurationReader.RefreshAsync();
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -79,19 +79,5 @@ public sealed class ConfigurationRefreshService : BackgroundService
         _logger.LogInformation(
             "Configuration refresh service stopping for application {ApplicationName}",
             _settings.ApplicationName);
-    }
-
-    private async Task RefreshConfigurationsAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug(
-            "Refreshing configurations for application {ApplicationName}",
-            _settings.ApplicationName);
-
-        var records = await _repository.GetByApplicationNameAsync(
-            _settings.ApplicationName, cancellationToken);
-
-        _logger.LogDebug(
-            "Refreshed {Count} configurations for application {ApplicationName}",
-            records.Count, _settings.ApplicationName);
     }
 }

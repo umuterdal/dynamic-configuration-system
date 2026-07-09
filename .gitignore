@@ -8,7 +8,6 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
 [Ll]og/
 [Ll]ogs/
 
@@ -45,3 +44,20 @@ Thumbs.db
 
 ## Publish
 publish/
+
+## Screenshots and temporary files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.deb
+*.http
+
+## Tool workspaces
+.opencode/
+.playwright-mcp/
+
+## Logs
+*.log
+logs/

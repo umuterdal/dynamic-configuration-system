@@ -5,94 +5,138 @@
     var applicationName = ViewBag.ApplicationName as string;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Configurations @(string.IsNullOrEmpty(applicationName) ? "" : $"- {applicationName}")</h2>
-        <a asp-action="Create" class="btn btn-primary">Create New</a>
+<div class="page-header">
+    <h2>
+        <i class="bi bi-list-ul me-2 text-primary"></i>
+        Configurations @(string.IsNullOrEmpty(applicationName) ? "" : $"- {applicationName}")
+    </h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>New Configuration
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+}
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <div class="mb-3">
-        <form asp-action="Index" method="get" class="row g-3">
-            <div class="col-auto">
-                <input type="text" name="applicationName" value="@applicationName" class="form-control" placeholder="Filter by Application Name" id="searchInput" />
+<div class="filter-bar">
+    <form asp-action="Index" method="get">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label mb-1">Application Name</label>
+                <input type="text" name="applicationName" value="@applicationName"
+                       class="form-control" placeholder="e.g. SERVICE-A, SERVICE-B" id="searchInput" />
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-outline-primary">Filter</button>
-                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary ms-1">
+                    <i class="bi bi-x-lg me-1"></i>Clear
+                </a>
             </div>
-        </form>
-    </div>
+            <div class="col-auto ms-auto">
+                <span class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>@Model.Count() record(s)
+                </span>
+            </div>
+        </div>
+    </form>
+</div>
 
-    <table class="table table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Value</th>
-                <th>Active</th>
-                <th>Application</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="configurationTable">
-            @foreach (var item in Model)
-            {
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
                 <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Type</td>
-                    <td>@item.Value</td>
-                    <td>
-                        @if (item.IsActive == 1)
-                        {
-                            <span class="badge bg-success">Active</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-danger">Inactive</span>
-                        }
-                    </td>
-                    <td>@item.ApplicationName</td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
+                    <th style="width: 130px;">ID</th>
+                    <th>Name</th>
+                    <th style="width: 90px;">Type</th>
+                    <th>Value</th>
+                    <th style="width: 90px;">Status</th>
+                    <th>Application</th>
+                    <th style="width: 140px;">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody id="configurationTable">
+                @if (Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="id-cell" title="@item.Id">@item.Id</td>
+                            <td class="fw-medium">@item.Name</td>
+                            <td class="type-cell">@item.Type</td>
+                            <td class="value-cell" title="@item.Value">@item.Value</td>
+                            <td>
+                                @if (item.IsActive == 1)
+                                {
+                                    <span class="badge-active">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-inactive">
+                                        <i class="bi bi-x-circle-fill me-1"></i>Inactive
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <span class="text-muted">@item.ApplicationName</span>
+                            </td>
+                            <td>
+                                <div class="action-btns">
+                                    <a asp-action="Edit" asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="mb-0">No configurations found</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {
     <script>
-        // Client-side filtering
-        document.getElementById('searchInput').addEventListener('keyup', function() {
+        document.getElementById('searchInput').addEventListener('keyup', function () {
             var filter = this.value.toLowerCase();
             var rows = document.querySelectorAll('#configurationTable tr');
-            rows.forEach(function(row) {
-                var applicationName = row.cells[5]?.textContent.toLowerCase() || '';
-                if (applicationName.includes(filter)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+            rows.forEach(function (row) {
+                if (row.cells.length < 6) return;
+                var appName = row.cells[5]?.textContent.toLowerCase() || '';
+                row.style.display = appName.includes(filter) ? '' : 'none';
             });
         });
     </script>
