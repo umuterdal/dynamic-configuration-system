@@ -69,7 +69,34 @@ await reader.RefreshAsync();
 | GET | `/api/demo/value/{key}` | String değer getir |
 | GET | `/api/demo/typed/{key}?type=int` | Tip belirterek değer getir |
 | GET | `/api/demo/all` | Tüm konfigürasyonları getir |
+| GET | `/api/demo/health` | Cache durumu ve polling bilgisi |
 | POST | `/api/demo/refresh` | Cache'i yenile |
+
+## Polling Nasıl Test Edilir?
+
+1. **Cache durumunu kontrol et:**
+   ```bash
+   curl http://localhost:5001/api/demo/health
+   ```
+   → `cacheAgeSeconds` değerini not et
+
+2. **Admin Panel'den bir değeri değiştir:**
+   - http://localhost:5000 → SiteName'i "soty.io" yerine "yeni-site.com" yap
+
+3. **Cache hemen değişmez** (30sn polling süresi var):
+   ```bash
+   curl http://localhost:5001/api/demo/value/SiteName
+   ```
+   → Hâlâ "soty.io" gösterir
+
+4. **Manuel refresh ile anında test et:**
+   ```bash
+   curl -X POST http://localhost:5001/api/demo/refresh
+   curl http://localhost:5001/api/demo/value/SiteName
+   ```
+   → Artık "yeni-site.com" gösterir
+
+5. **Veya 30sn bekle** → otomatik yenilenir
 
 ## Mimari
 

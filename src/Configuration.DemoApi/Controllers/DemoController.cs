@@ -124,4 +124,18 @@ public class DemoController : ControllerBase
         _logger.LogInformation("Configuration cache refreshed manually");
         return Ok(new { Message = "Configuration refreshed successfully" });
     }
+
+    /// <summary>
+    /// Gets cache health information for monitoring and debugging.
+    /// Shows last cache update time, cache age, polling interval, and cached keys.
+    /// </summary>
+    /// <returns>Health info including last update time, key count, and polling interval.</returns>
+    [HttpGet("health")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public IActionResult GetHealth()
+    {
+        var healthInfo = _configurationReader.GetHealthInfo();
+        _logger.LogDebug("Health check requested for application");
+        return Ok(healthInfo);
+    }
 }

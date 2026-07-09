@@ -18,9 +18,11 @@ namespace Configuration.Library;
 public sealed class ConfigurationReader : IDisposable
 {
     private readonly string _applicationName;
+    private readonly int _refreshIntervalMs;
     private readonly IConfigurationRepository _repository;
     private readonly ILogger<ConfigurationReader> _logger;
     private ConcurrentDictionary<string, ConfigurationRecord> _cache;
+    private DateTime _lastCacheUpdate;
     private int _refreshing;
     private bool _disposed;
 
@@ -47,6 +49,8 @@ public sealed class ConfigurationReader : IDisposable
 
         if (refreshTimerIntervalInMs <= 0)
             throw new ArgumentOutOfRangeException(nameof(refreshTimerIntervalInMs), "Refresh interval must be positive.");
+
+        _refreshIntervalMs = refreshTimerIntervalInMs;
 
         // Create MongoDB connection and repository internally
         var mongoSettings = MongoClientSettings.FromConnectionString(connectionString);
@@ -87,6 +91,8 @@ public sealed class ConfigurationReader : IDisposable
 
         if (refreshTimerIntervalInMs <= 0)
             throw new ArgumentOutOfRangeException(nameof(refreshTimerIntervalInMs), "Refresh interval must be positive.");
+
+        _refreshIntervalMs = refreshTimerIntervalInMs;
 
         // Initial load - synchronous to ensure cache is populated before first access
         LoadConfigurationsAsync().GetAwaiter().GetResult();
@@ -176,6 +182,30 @@ public sealed class ConfigurationReader : IDisposable
     }
 
     /// <summary>
+    /// Gets cache health information for monitoring and debugging.
+    /// </summary>
+    /// <returns>Health info including last update time, key count, and polling interval.</returns>
+    public object GetHealthInfo()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        var cachedKeys = _cache
+            .Where(kvp => kvp.Value.IsActive == 1)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        return new
+        {
+            ApplicationName = _applicationName,
+            LastCacheUpdate = _lastCacheUpdate,
+            CacheAgeSeconds = (int)(DateTime.UtcNow - _lastCacheUpdate).TotalSeconds,
+            RefreshIntervalMs = _refreshIntervalMs,
+            CachedKeyCount = cachedKeys.Count,
+            CachedKeys = cachedKeys
+        };
+    }
+
+    /// <summary>
     /// Forces an immediate refresh of the configuration cache.
     /// Thread-safe: concurrent calls are coalesced into a single refresh.
     /// </summary>
@@ -215,6 +245,7 @@ public sealed class ConfigurationReader : IDisposable
 
             // Atomic swap: replace the entire cache reference
             Interlocked.Exchange(ref _cache, newCache);
+            _lastCacheUpdate = DateTime.UtcNow;
 
             _logger.LogInformation(
                 "Loaded {Count} active configurations for application {ApplicationName}",
@@ -248,6 +279,7 @@ public sealed class ConfigurationReader : IDisposable
 
             // Atomic swap: replace the entire cache reference
             Interlocked.Exchange(ref _cache, newCache);
+            _lastCacheUpdate = DateTime.UtcNow;
 
             _logger.LogDebug(
                 "Refreshed {Count} configurations for application {ApplicationName}",
