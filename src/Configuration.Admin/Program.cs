@@ -23,6 +23,9 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 // Add Application services
 builder.Services.AddApplicationServices();
 
+// Add RabbitMQ broker publisher (sends change events for instant consumer refresh)
+builder.Services.AddConfigurationBroker(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline

@@ -49,8 +49,11 @@ builder.Services.AddApplicationServices();
 // Add ConfigurationReader
 builder.Services.AddConfigurationReader(builder.Configuration);
 
-// Add BackgroundService for periodic refresh
+// Add BackgroundService for periodic refresh (polling — primary mechanism)
 builder.Services.AddHostedService<ConfigurationRefreshService>();
+
+// Add RabbitMQ broker consumer (improves refresh latency — secondary mechanism)
+builder.Services.AddConfigurationBrokerConsumer(builder.Configuration);
 
 var app = builder.Build();
 

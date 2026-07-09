@@ -1,27 +1,33 @@
 using Configuration.Application.Services;
 using Configuration.Domain.DTOs;
+using Configuration.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Configuration.Admin.Controllers;
 
 /// <summary>
 /// Controller for managing configuration records via web UI.
+/// Publishes change events to RabbitMQ for instant consumer refresh.
 /// </summary>
 public class ConfigurationController : Controller
 {
     private readonly IConfigurationService _configurationService;
+    private readonly IConfigurationBrokerPublisher _brokerPublisher;
     private readonly ILogger<ConfigurationController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the ConfigurationController.
     /// </summary>
     /// <param name="configurationService">The configuration service.</param>
+    /// <param name="brokerPublisher">The broker publisher for change events.</param>
     /// <param name="logger">Logger instance.</param>
     public ConfigurationController(
         IConfigurationService configurationService,
+        IConfigurationBrokerPublisher brokerPublisher,
         ILogger<ConfigurationController> logger)
     {
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
+        _brokerPublisher = brokerPublisher ?? throw new ArgumentNullException(nameof(brokerPublisher));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -61,6 +67,10 @@ public class ConfigurationController : Controller
         try
         {
             await _configurationService.CreateAsync(request, cancellationToken);
+
+            // Publish change event for instant consumer refresh
+            await _brokerPublisher.PublishAsync(request.ApplicationName, "Created", cancellationToken);
+
             TempData["SuccessMessage"] = "Configuration created successfully.";
             return RedirectToAction(nameof(Index), new { applicationName = request.ApplicationName });
         }
@@ -109,6 +119,10 @@ public class ConfigurationController : Controller
         try
         {
             await _configurationService.UpdateAsync(request, cancellationToken);
+
+            // Publish change event for instant consumer refresh
+            await _brokerPublisher.PublishAsync(request.ApplicationName, "Updated", cancellationToken);
+
             TempData["SuccessMessage"] = "Configuration updated successfully.";
             return RedirectToAction(nameof(Index), new { applicationName = request.ApplicationName });
         }
@@ -143,6 +157,11 @@ public class ConfigurationController : Controller
         {
             var record = await _configurationService.GetByIdAsync(id, cancellationToken);
             await _configurationService.DeleteAsync(id, cancellationToken);
+
+            // Publish change event for instant consumer refresh
+            if (record != null)
+                await _brokerPublisher.PublishAsync(record.ApplicationName, "Deleted", cancellationToken);
+
             TempData["SuccessMessage"] = "Configuration deleted successfully.";
             return RedirectToAction(nameof(Index), new { applicationName = record?.ApplicationName });
         }

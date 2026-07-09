@@ -19,6 +19,27 @@ services:
     networks:
       - config-network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: configuration-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - config-network
+
   configuration-admin:
     build:
       context: .
@@ -33,6 +54,11 @@ services:
       - ConfigurationReader__DatabaseName=ConfigurationDb
       - ConfigurationReader__CollectionName=Configurations
       - ConfigurationReader__RefreshTimerIntervalInMs=30000
+      - ConfigurationBroker__HostName=rabbitmq
+      - ConfigurationBroker__Port=5672
+      - ConfigurationBroker__UserName=guest
+      - ConfigurationBroker__Password=guest
+      - ConfigurationBroker__ExchangeName=config-changes
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 30s
@@ -41,6 +67,8 @@ services:
       start_period: 15s
     depends_on:
       mongodb:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -60,6 +88,11 @@ services:
       - ConfigurationReader__DatabaseName=ConfigurationDb
       - ConfigurationReader__CollectionName=Configurations
       - ConfigurationReader__RefreshTimerIntervalInMs=30000
+      - ConfigurationBroker__HostName=rabbitmq
+      - ConfigurationBroker__Port=5672
+      - ConfigurationBroker__UserName=guest
+      - ConfigurationBroker__Password=guest
+      - ConfigurationBroker__ExchangeName=config-changes
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/swagger/index.html"]
       interval: 30s
@@ -69,12 +102,15 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - config-network
 
 volumes:
   mongodb_data:
+  rabbitmq_data:
 
 networks:
   config-network:
