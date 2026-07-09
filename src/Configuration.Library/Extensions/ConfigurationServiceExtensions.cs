@@ -4,6 +4,7 @@ using Configuration.Library.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 
 namespace Configuration.Library.Extensions;
 
@@ -31,11 +32,22 @@ public static class ConfigurationServiceExtensions
             var repository = sp.GetRequiredService<IConfigurationRepository>();
             var logger = sp.GetRequiredService<ILogger<ConfigurationReader>>();
 
+            // Create MongoDB client for health checks
+            IMongoClient? mongoClient = null;
+            if (!string.IsNullOrWhiteSpace(settings.ConnectionString))
+            {
+                var mongoSettings = MongoClientSettings.FromConnectionString(settings.ConnectionString);
+                mongoSettings.ServerApi = new ServerApi(ServerApiVersion.V1);
+                mongoClient = new MongoClient(mongoSettings);
+            }
+
             return new ConfigurationReader(
                 settings.ApplicationName,
                 repository,
                 settings.RefreshTimerIntervalInMs,
-                logger);
+                logger,
+                mongoClient,
+                settings.DatabaseName);
         });
 
         return services;

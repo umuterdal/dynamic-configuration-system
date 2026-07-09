@@ -6,6 +6,7 @@ using Configuration.Domain.Interfaces;
 using Configuration.Infrastructure.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Configuration.Library;
@@ -21,6 +22,8 @@ public sealed class ConfigurationReader : IDisposable
     private readonly int _refreshIntervalMs;
     private readonly IConfigurationRepository _repository;
     private readonly ILogger<ConfigurationReader> _logger;
+    private readonly IMongoClient? _mongoClient;
+    private readonly string? _databaseName;
     private ConcurrentDictionary<string, ConfigurationRecord> _cache;
     private DateTime _lastCacheUpdate;
     private int _refreshing;
@@ -28,6 +31,8 @@ public sealed class ConfigurationReader : IDisposable
 
     private const string DefaultDatabaseName = "ConfigurationDb";
     private const string DefaultCollectionName = "Configurations";
+    private const int MaxRetryAttempts = 3;
+    private const int BaseRetryDelayMs = 500;
 
     /// <summary>
     /// Initializes a new instance of the ConfigurationReader.
@@ -57,6 +62,8 @@ public sealed class ConfigurationReader : IDisposable
         mongoSettings.ServerApi = new ServerApi(ServerApiVersion.V1);
 
         var client = new MongoClient(mongoSettings);
+        _mongoClient = client;
+        _databaseName = DefaultDatabaseName;
         var database = client.GetDatabase(DefaultDatabaseName);
         var collection = database.GetCollection<ConfigurationRecord>(DefaultCollectionName);
 
@@ -78,16 +85,22 @@ public sealed class ConfigurationReader : IDisposable
     /// <param name="repository">The configuration repository for data access.</param>
     /// <param name="refreshTimerIntervalInMs">Refresh interval in milliseconds (used by BackgroundService).</param>
     /// <param name="logger">Logger instance.</param>
+    /// <param name="mongoClient">Optional MongoDB client for health checks.</param>
+    /// <param name="databaseName">Optional database name for health checks.</param>
     internal ConfigurationReader(
         string applicationName,
         IConfigurationRepository repository,
         int refreshTimerIntervalInMs,
-        ILogger<ConfigurationReader> logger)
+        ILogger<ConfigurationReader> logger,
+        IMongoClient? mongoClient = null,
+        string? databaseName = null)
     {
         _applicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _cache = new ConcurrentDictionary<string, ConfigurationRecord>(StringComparer.OrdinalIgnoreCase);
+        _mongoClient = mongoClient;
+        _databaseName = databaseName;
 
         if (refreshTimerIntervalInMs <= 0)
             throw new ArgumentOutOfRangeException(nameof(refreshTimerIntervalInMs), "Refresh interval must be positive.");
@@ -183,9 +196,10 @@ public sealed class ConfigurationReader : IDisposable
 
     /// <summary>
     /// Gets cache health information for monitoring and debugging.
+    /// Includes MongoDB connectivity status.
     /// </summary>
-    /// <returns>Health info including last update time, key count, and polling interval.</returns>
-    public object GetHealthInfo()
+    /// <returns>Health info including last update time, key count, polling interval, and MongoDB status.</returns>
+    public async Task<object> GetHealthInfoAsync()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -194,6 +208,8 @@ public sealed class ConfigurationReader : IDisposable
             .Select(kvp => kvp.Key)
             .ToList();
 
+        var mongodbStatus = await CheckMongoDbHealthAsync();
+
         return new
         {
             ApplicationName = _applicationName,
@@ -201,16 +217,36 @@ public sealed class ConfigurationReader : IDisposable
             CacheAgeSeconds = (int)(DateTime.UtcNow - _lastCacheUpdate).TotalSeconds,
             RefreshIntervalMs = _refreshIntervalMs,
             CachedKeyCount = cachedKeys.Count,
-            CachedKeys = cachedKeys
+            CachedKeys = cachedKeys,
+            MongoDB = mongodbStatus
         };
+    }
+
+    private async Task<string> CheckMongoDbHealthAsync()
+    {
+        if (_mongoClient == null)
+            return "not_configured";
+
+        try
+        {
+            var database = _mongoClient.GetDatabase(_databaseName ?? DefaultDatabaseName);
+            await database.RunCommandAsync<BsonDocument>(new BsonDocument("ping", 1), cancellationToken: CancellationToken.None);
+            return "healthy";
+        }
+        catch
+        {
+            return "unhealthy";
+        }
     }
 
     /// <summary>
     /// Forces an immediate refresh of the configuration cache.
     /// Thread-safe: concurrent calls are coalesced into a single refresh.
+    /// Includes retry policy with exponential backoff for transient failures.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task RefreshAsync()
+    public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -220,7 +256,7 @@ public sealed class ConfigurationReader : IDisposable
 
         try
         {
-            await RefreshConfigurationsAsync();
+            await RefreshWithRetryAsync(cancellationToken);
         }
         finally
         {
@@ -260,7 +296,32 @@ public sealed class ConfigurationReader : IDisposable
         }
     }
 
-    private async Task RefreshConfigurationsAsync()
+    private async Task RefreshWithRetryAsync(CancellationToken cancellationToken)
+    {
+        for (int attempt = 1; attempt <= MaxRetryAttempts; attempt++)
+        {
+            try
+            {
+                await RefreshConfigurationsAsync(cancellationToken);
+                return;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex) when (attempt < MaxRetryAttempts)
+            {
+                var delay = BaseRetryDelayMs * (int)Math.Pow(2, attempt - 1);
+                _logger.LogWarning(ex,
+                    "Refresh attempt {Attempt}/{MaxAttempts} failed for application {ApplicationName}. " +
+                    "Retrying in {Delay}ms...",
+                    attempt, MaxRetryAttempts, _applicationName, delay);
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
+    }
+
+    private async Task RefreshConfigurationsAsync(CancellationToken cancellationToken = default)
     {
         if (_disposed) return;
 
@@ -268,7 +329,7 @@ public sealed class ConfigurationReader : IDisposable
         {
             _logger.LogDebug("Refreshing configurations for application {ApplicationName}", _applicationName);
 
-            var records = await _repository.GetByApplicationNameAsync(_applicationName);
+            var records = await _repository.GetByApplicationNameAsync(_applicationName, cancellationToken);
 
             // Build new cache content
             var newCache = new ConcurrentDictionary<string, ConfigurationRecord>(StringComparer.OrdinalIgnoreCase);
@@ -285,12 +346,17 @@ public sealed class ConfigurationReader : IDisposable
                 "Refreshed {Count} configurations for application {ApplicationName}",
                 records.Count, _applicationName);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
                 "Failed to refresh configurations for application {ApplicationName}. " +
                 "Cache will retain previous values.",
                 _applicationName);
+            throw;
         }
     }
 

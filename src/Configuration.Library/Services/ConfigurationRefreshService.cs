@@ -56,7 +56,7 @@ public sealed class ConfigurationRefreshService : BackgroundService
 
                 try
                 {
-                    await _configurationReader.RefreshAsync();
+                    await _configurationReader.RefreshAsync(stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
