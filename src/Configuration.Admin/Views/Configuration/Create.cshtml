@@ -1,0 +1,65 @@
+@model Configuration.Domain.DTOs.CreateConfigurationRequest
+
+@{
+    ViewData["Title"] = "Create Configuration";
+}
+
+<div class="container mt-4">
+    <h2>Create Configuration</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Type" class="form-label">Type</label>
+                    <select asp-for="Type" class="form-select">
+                        <option value="">Select Type</option>
+                        <option value="string">String</option>
+                        <option value="int">Integer</option>
+                        <option value="double">Double</option>
+                        <option value="bool">Boolean</option>
+                    </select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Value" class="form-label">Value</label>
+                    <input asp-for="Value" class="form-control" />
+                    <span asp-validation-for="Value" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="IsActive" class="form-label">Is Active</label>
+                    <select asp-for="IsActive" class="form-select">
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ApplicationName" class="form-label">Application Name</label>
+                    <input asp-for="ApplicationName" class="form-control" />
+                    <span asp-validation-for="ApplicationName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
