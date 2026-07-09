@@ -3,12 +3,16 @@ using System.ComponentModel;
 using System.Globalization;
 using Configuration.Domain.Entities;
 using Configuration.Domain.Interfaces;
+using Configuration.Infrastructure.Data;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Driver;
 
 namespace Configuration.Library;
 
 /// <summary>
 /// Thread-safe configuration reader with in-memory cache.
+/// Accepts connectionString directly — creates its own MongoDB repository internally.
 /// Refresh is handled externally by ConfigurationRefreshService (BackgroundService).
 /// </summary>
 public sealed class ConfigurationReader : IDisposable
@@ -20,15 +24,57 @@ public sealed class ConfigurationReader : IDisposable
     private int _refreshing;
     private bool _disposed;
 
+    private const string DefaultDatabaseName = "ConfigurationDb";
+    private const string DefaultCollectionName = "Configurations";
+
     /// <summary>
     /// Initializes a new instance of the ConfigurationReader.
+    /// Creates its own MongoDB connection and repository internally.
     /// Loads initial configuration from the repository.
+    /// </summary>
+    /// <param name="applicationName">The application name for service isolation.</param>
+    /// <param name="connectionString">MongoDB connection string.</param>
+    /// <param name="refreshTimerIntervalInMs">Refresh interval in milliseconds (used by BackgroundService).</param>
+    public ConfigurationReader(
+        string applicationName,
+        string connectionString,
+        int refreshTimerIntervalInMs)
+    {
+        _applicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
+
+        if (refreshTimerIntervalInMs <= 0)
+            throw new ArgumentOutOfRangeException(nameof(refreshTimerIntervalInMs), "Refresh interval must be positive.");
+
+        // Create MongoDB connection and repository internally
+        var mongoSettings = MongoClientSettings.FromConnectionString(connectionString);
+        mongoSettings.ServerApi = new ServerApi(ServerApiVersion.V1);
+
+        var client = new MongoClient(mongoSettings);
+        var database = client.GetDatabase(DefaultDatabaseName);
+        var collection = database.GetCollection<ConfigurationRecord>(DefaultCollectionName);
+
+        var repoLogger = NullLogger<MongoConfigurationRepository>.Instance;
+        _repository = new MongoConfigurationRepository(collection, repoLogger);
+
+        _logger = NullLogger<ConfigurationReader>.Instance;
+        _cache = new ConcurrentDictionary<string, ConfigurationRecord>(StringComparer.OrdinalIgnoreCase);
+
+        // Initial load - synchronous to ensure cache is populated before first access
+        LoadConfigurationsAsync().GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the ConfigurationReader.
+    /// Used when repository and logger are provided via dependency injection.
     /// </summary>
     /// <param name="applicationName">The application name for service isolation.</param>
     /// <param name="repository">The configuration repository for data access.</param>
     /// <param name="refreshTimerIntervalInMs">Refresh interval in milliseconds (used by BackgroundService).</param>
     /// <param name="logger">Logger instance.</param>
-    public ConfigurationReader(
+    internal ConfigurationReader(
         string applicationName,
         IConfigurationRepository repository,
         int refreshTimerIntervalInMs,

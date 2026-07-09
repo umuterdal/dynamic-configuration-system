@@ -17,6 +17,24 @@ public sealed class MongoConfigurationRepository : IConfigurationRepository
 
     /// <summary>
     /// Initializes a new instance of the MongoConfigurationRepository.
+    /// Used by ConfigurationReader when created directly with a connection string.
+    /// </summary>
+    /// <param name="collection">The MongoDB collection.</param>
+    /// <param name="logger">Logger instance.</param>
+    public MongoConfigurationRepository(
+        IMongoCollection<ConfigurationRecord> collection,
+        ILogger<MongoConfigurationRepository> logger)
+    {
+        _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        var indexKeys = Builders<ConfigurationRecord>.IndexKeys.Ascending(x => x.ApplicationName);
+        var indexModel = new CreateIndexModel<ConfigurationRecord>(indexKeys);
+        _collection.Indexes.CreateOne(indexModel);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the MongoConfigurationRepository.
     /// </summary>
     /// <param name="settings">Configuration settings including connection string and collection info.</param>
     /// <param name="logger">Logger instance.</param>

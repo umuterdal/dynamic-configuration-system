@@ -135,8 +135,8 @@
             var rows = document.querySelectorAll('#configurationTable tr');
             rows.forEach(function (row) {
                 if (row.cells.length < 6) return;
-                var appName = row.cells[5]?.textContent.toLowerCase() || '';
-                row.style.display = appName.includes(filter) ? '' : 'none';
+                var name = row.cells[1]?.textContent.toLowerCase() || '';
+                row.style.display = name.includes(filter) ? '' : 'none';
             });
         });
     </script>
