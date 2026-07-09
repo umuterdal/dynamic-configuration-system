@@ -462,7 +462,6 @@ docker-compose down -v</code></pre>
 <tr><td><code>Configuration.Library</code></td><td>Class Library</td><td>ConfigurationReader (dışarıya açık API), refresh servisi, broker consumer</td></tr>
 <tr><td><code>Configuration.Admin</code></td><td>Web (MVC)</td><td>ASP.NET Core MVC Admin Paneli</td></tr>
 <tr><td><code>Configuration.DemoApi</code></td><td>Web (API)</td><td>Swagger'lı Demo API</td></tr>
-<tr><td><code>Configuration.Shared</code></td><td>Class Library</td><td>Paylaşılan yardımcılar</td></tr>
 <tr><td><code>Configuration.UnitTests</code></td><td>Test</td><td>39 adet xUnit unit test</td></tr>
 </table>
 
@@ -727,8 +726,25 @@ document.getElementById('searchInput').addEventListener('keyup', function () {
     "cacheAgeSeconds": 25,
     "refreshIntervalMs": 30000,
     "cachedKeyCount": 4,
-    "cachedKeys": ["TaxRate", "MaxItemCount", "IsBasketEnabled", "SiteName"]
+    "cachedKeys": ["TaxRate", "MaxItemCount", "IsBasketEnabled", "SiteName"],
+    "mongoDB": "healthy"
 }</code></pre>
+
+        <h3>Admin Panel Health Endpoint</h3>
+<p>Admin Panel footer'ında MongoDB durumu gösterilir:</p>
+<pre><code># Admin Panel health endpoint
+curl http://localhost:5000/Configuration/Health
+
+# Response:
+{
+    "applicationName": "Configuration.Admin",
+    "lastCacheUpdate": "2026-07-09T18:03:38Z",
+    "cacheAgeSeconds": 22,
+    "refreshIntervalMs": 30000,
+    "cachedKeyCount": 0,
+    "mongoDB": "healthy"
+}</code></pre>
+<p>Footer'da <code>MongoDB</code> yazısı yeşil (sağlıklı) veya kırmızı (sağlıksız) olarak gösterilir, yanında tik/x ikonu bulunur.</p>
 
         <h3>Örnek Kullanım</h3>
 <pre><code># Tüm konfigürasyonları getir
@@ -852,15 +868,15 @@ if (existing.Count > 0)
 
         <h3>Test Kategorileri</h3>
 
-<h4>ConfigurationReader Tests (14 test)</h4>
+<h4>ConfigurationReader Tests (16 test)</h4>
 <ul>
     <li>GetValue — string, int, double, bool tip dönüşümleri</li>
     <li>GetValue — eksik key hatası (KeyNotFoundException)</li>
     <li>GetValue — pasif key hatası</li>
     <li>GetValue — geçersiz tip dönüşümü hatası</li>
+    <li>GetValue — case-insensitive erişim</li>
     <li>TryGetValue — mevcut/olmayan key</li>
     <li>GetAllValues — sadece aktif kayıtlar</li>
-    <li>GetValue — case-insensitive erişim</li>
     <li>RefreshAsync — cache güncelleme</li>
     <li>Constructor — null parametreler</li>
     <li>Constructor — geçersiz refresh aralığı</li>
@@ -877,12 +893,10 @@ if (existing.Count > 0)
     <li>DeleteAsync — silme</li>
 </ul>
 
-<h4>Broker Tests (15 test)</h4>
+<h4>Broker Tests (13 test)</h4>
 <ul>
-    <li>RabbitMQ Publisher — publish işlemleri</li>
-    <li>Broker Consumer — mesaj işleme</li>
-    <li>Hata senaryoları — bağlantı hataları</li>
-    <li>Graceful degradation</li>
+    <li>RabbitMQ Publisher — 6 test (publish, null parametreler, hata senaryoları)</li>
+    <li>Broker Consumer — 7 test (mesaj işleme, constructor validasyonu, graceful degradation)</li>
 </ul>
 
         <h3>Test Çalıştırma</h3>
@@ -933,12 +947,13 @@ dotnet test --collect:"XPlat Code Coverage"</code></pre>
         </ul>
 
         <h3>Exponential Backoff</h3>
-        <p>Basit retry stratejisi:</p>
-        <ul>
-            <li>İlk deneme: anında</li>
-            <li>Sonraki denemeler: üstel gecikme</li>
-            <li>Maksimum deneme sayısı: yapılandırılabilir</li>
-        </ul>
+        <p>Yenileme denemelerinde üstel gecikme stratejisi kullanılır:</p>
+<ul>
+    <li>İlk deneme: anında</li>
+    <li>2. deneme: 500ms bekleme</li>
+    <li>3. deneme: 1000ms bekleme</li>
+    <li>Maksimum 3 deneme — başarısız olursa cache korunur</li>
+</ul>
     </section>
 
     <!-- 15. Design Patterns -->
