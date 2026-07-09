@@ -136,7 +136,8 @@
             rows.forEach(function (row) {
                 if (row.cells.length < 6) return;
                 var name = row.cells[1]?.textContent.toLowerCase() || '';
-                row.style.display = name.includes(filter) ? '' : 'none';
+                var app = row.cells[5]?.textContent.toLowerCase() || '';
+                row.style.display = (name.includes(filter) || app.includes(filter)) ? '' : 'none';
             });
         });
 
