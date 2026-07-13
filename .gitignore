@@ -62,6 +62,9 @@ publish/
 *.log
 logs/
 
+## IDE launch settings (per-developer, should not be committed)
+**/Properties/launchSettings.json
+
 ## Internal files (not for repo)
 AGENTS.md
 backend-developer-case.md

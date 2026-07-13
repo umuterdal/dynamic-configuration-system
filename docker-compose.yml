@@ -46,7 +46,7 @@ services:
       dockerfile: src/Configuration.Admin/Dockerfile
     container_name: configuration-admin
     ports:
-      - "5000:8080"
+      - "5003:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConfigurationReader__ConnectionString=mongodb://admin:password123@mongodb:27017
